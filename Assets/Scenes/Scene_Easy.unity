@@ -2655,11 +2655,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::EnemySpawner
   enemyPrefab: {fileID: 1585481842752582766, guid: 12e763fac69d6c340991fdd70203a9ef, type: 3}
   spawnInterval: 1
+  maxEnemies: 4
   minSpawnDistance: 15
   maxSpawnDistance: 25
   safeZoneRadius: 3
   enemySpeed: 2
   playerTransform: {fileID: 1658240174}
+  dataLevelIni: {fileID: 11400000, guid: df3eee7360e71b448bc83ec7bf6ef12b, type: 2}
 --- !u!114 &2066651892
 MonoBehaviour:
   m_ObjectHideFlags: 0
