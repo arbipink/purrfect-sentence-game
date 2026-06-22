@@ -54,7 +54,6 @@ public class EnemySpawner : MonoBehaviour
         List<string> kataBenar = dataLevelIni.daftarKalimat[indexKalimatAktif].potonganKataBenar;
         List<string> kataSalah = dataLevelIni.kataPengecoh;
 
-        bool wajibKataBenar = false;
 
         bool kataPertamaSudahAda = false;
         foreach (GameObject enemy in activeEnemies)
@@ -93,24 +92,24 @@ public class EnemySpawner : MonoBehaviour
 
         float randomDistance = Random.Range(minSpawnDistance, maxSpawnDistance);
 
-        // --- LOGIKA BARU: MEMBATASI SPAWN DI DEPAN ---
+        // Menggunakan probabilitas sederhana agar musuh muncul dari belakang atau samping kiri/kanan
         Vector3 spawnDirection = Vector3.zero;
-        bool validDirection = false;
+        float randomChance = Random.Range(0f, 100f);
 
-        // Lakukan looping sampai dapet arah yang BUKAN di depan kucing
-        while (!validDirection)
+        if (randomChance < 40f)
         {
-            Vector2 randomPoint = Random.insideUnitCircle.normalized;
-            spawnDirection = new Vector3(randomPoint.x, 0, randomPoint.y);
-
-            // Cek sudut antara arah spawn dengan arah hadap Kucing (playerTransform.forward)
-            float angle = Vector3.Angle(playerTransform.forward, spawnDirection);
-
-            // Jika sudutnya lebih besar dari 60 derajat (artinya dia ada di samping atau belakang, bukan depan pas)
-            if (angle > 60f) 
-            {
-                validDirection = true;
-            }
+            // 40% muncul dari arah belakang kamera (Sumbu Z negatif relatif terhadap kucing)
+            spawnDirection = new Vector3(Random.Range(-1f, 1f), 0f, -1f).normalized;
+        }
+        else if (randomChance < 70f)
+        {
+            // 30% muncul dari arah kiri (Sumbu X negatif)
+            spawnDirection = new Vector3(-1f, 0f, Random.Range(-0.5f, 0.5f)).normalized;
+        }
+        else
+        {
+            // 30% muncul dari arah kanan (Sumbu X positif)
+            spawnDirection = new Vector3(1f, 0f, Random.Range(-0.5f, 0.5f)).normalized;
         }
 
         Vector3 spawnOffset = spawnDirection * randomDistance;
@@ -130,5 +129,32 @@ public class EnemySpawner : MonoBehaviour
         }
 
 
+    }
+
+    public int GetCurrentKalimatIndex()
+    {
+        return indexKalimatAktif;
+    }
+
+    public void LanjutKalimatBerikutnya()
+    {
+        indexKalimatAktif++;
+        
+        if (indexKalimatAktif >= dataLevelIni.daftarKalimat.Count)
+        {
+            Debug.Log("SEMUA KALIMAT SELESAI! LEVEL CLEAR!");
+            // Nanti di sini kamu bisa panggil fungsi ganti scene UI Menang atau LoadScene level berikutnya
+        }
+        else
+        {
+            Debug.Log("Kalimat sukses! Bersihkan sisa musuh dan lanjut ke kalimat berikutnya...");
+            
+            // Hancurkan semua musuh sisa dari kalimat sebelumnya agar tidak memenuhi layar
+            foreach (var enemy in activeEnemies) 
+            { 
+                if (enemy != null) Destroy(enemy); 
+            }
+            activeEnemies.Clear();
+        }
     }
 }

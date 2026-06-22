@@ -20,12 +20,16 @@ public class DotConnectManager : MonoBehaviour
 
     [Header("Layer Settings")]
     public LayerMask groundLayer;
+    public LayerMask enemyLayer;
+
+    private EnemySpawner spawner;
 
     void Start()
     {
-        // Memaksa kursor mouse untuk tetap kelihatan dan bebas bergerak di layar
         Cursor.lockState = CursorLockMode.None;
         Cursor.visible = true;
+
+        spawner = FindFirstObjectByType<EnemySpawner>();
     }
 
     void Update()
@@ -65,14 +69,38 @@ public class DotConnectManager : MonoBehaviour
     void HandleMouseClick()
     {
         Vector2 mousePosition = Pointer.current.position.ReadValue();
-        Ray ray = Camera.main.ScreenPointToRay(mousePosition);
-        RaycastHit hit;
-
-        if (Physics.Raycast(ray, out hit))
+        
+        // 1. Proyeksikan posisi mouse langsung ke ruang 3D sejajar jarak kedalaman kamera
+        // Kita hitung jarak antara kamera dan target jamur (menggunakan estimasi jarak konstan)
+        float targetZDepth = 15f; // Estimasi jarak horizontal dari Main Camera ke jalanan kucing
+        
+        if (lastSelectedDot != null)
         {
-            if (hit.collider.CompareTag("Enemy"))
+            targetZDepth = Mathf.Abs(Camera.main.transform.position.z - lastSelectedDot.transform.position.z);
+        }
+        else
+        {
+            // Jika belum ada dot yang dipilih, cari jamur pertama di scene untuk patokan jarak Z
+            EnemyMovement sampleEnemy = FindFirstObjectByType<EnemyMovement>();
+            if (sampleEnemy != null)
             {
-                lastSelectedDot = hit.collider.gameObject;
+                targetZDepth = Mathf.Abs(Camera.main.transform.position.z - sampleEnemy.transform.position.z);
+            }
+        }
+
+        Vector3 screenToWorldPoint = Camera.main.ScreenToWorldPoint(new Vector3(mousePosition.x, mousePosition.y, targetZDepth));
+
+        // 2. Gunakan OverlapSphere di titik proyeksi tersebut untuk menangkap Collider musuh
+        // Radius 2.0f agar area klik mouse sedikit lebih luas dan toleran terhadap sentuhan player
+        Collider[] hitColliders = Physics.OverlapSphere(screenToWorldPoint, 2.0f, enemyLayer.value);
+
+        if (hitColliders.Length > 0)
+        {
+            Collider enemyCollider = hitColliders[0];
+
+            if (enemyCollider.CompareTag("Enemy"))
+            {
+                lastSelectedDot = enemyCollider.gameObject;
 
                 connectedDots.Clear();
                 connectedDots.Add(lastSelectedDot);
@@ -94,14 +122,24 @@ public class DotConnectManager : MonoBehaviour
     void HandleMouseDrag()
     {
         Vector2 mousePosition = Pointer.current.position.ReadValue();
-        Ray ray = Camera.main.ScreenPointToRay(mousePosition);
-        RaycastHit hit;
-
-        if (Physics.Raycast(ray, out hit))
+        
+        float targetZDepth = 15f;
+        if (lastSelectedDot != null)
         {
-            if (hit.collider.CompareTag("Enemy") && !connectedDots.Contains(hit.collider.gameObject))
+            targetZDepth = Mathf.Abs(Camera.main.transform.position.z - lastSelectedDot.transform.position.z);
+        }
+
+        Vector3 screenToWorldPoint = Camera.main.ScreenToWorldPoint(new Vector3(mousePosition.x, mousePosition.y, targetZDepth));
+
+        Collider[] hitColliders = Physics.OverlapSphere(screenToWorldPoint, 2.0f, enemyLayer.value);
+
+        if (hitColliders.Length > 0)
+        {
+            Collider enemyCollider = hitColliders[0];
+
+            if (enemyCollider.CompareTag("Enemy") && !connectedDots.Contains(enemyCollider.gameObject))
             {
-                GameObject currentDot = hit.collider.gameObject;
+                GameObject currentDot = enemyCollider.gameObject;
 
                 EnemyMovement movement = currentDot.GetComponent<EnemyMovement>();
                 if (movement != null)
@@ -123,15 +161,18 @@ public class DotConnectManager : MonoBehaviour
 
         if (currentLine == null) return;
 
+        // Untuk visual penarikan garis di tanah tetap gunakan ground raycast standar agar menempel rapi
+        Ray ray = Camera.main.ScreenPointToRay(mousePosition);
+        RaycastHit hit;
         Vector3 mouseWorldPos;
-        if (Physics.Raycast(ray, out hit, Mathf.Infinity, groundLayer))
+        
+        if (Physics.Raycast(ray, out hit, Mathf.Infinity, groundLayer.value))
         {
             mouseWorldPos = hit.point + (Vector3.up * lineHoverOffset);
         }
         else
         {
-            float distanceToCamera = Vector3.Distance(Camera.main.transform.position, lastSelectedDot.transform.position);
-            mouseWorldPos = Camera.main.ScreenToWorldPoint(new Vector3(mousePosition.x, mousePosition.y, distanceToCamera));
+            mouseWorldPos = screenToWorldPoint + (Vector3.up * lineHoverOffset);
         }
 
         currentLine.positionCount = linePoints.Count + 1;
@@ -144,35 +185,74 @@ public class DotConnectManager : MonoBehaviour
         {
             if (connectedDots.Count > 1)
             {
-                foreach (GameObject dot in connectedDots)
+                // --- LOGIKA VALIDASI KALIMAT ---
+                if (CekApakahKalimatBenar())
                 {
-                    if (dot != null)
+                    // Jika Benar, Lenyapkan Jamur!
+                    foreach (GameObject dot in connectedDots)
                     {
-                        Destroy(dot);
+                        if (dot != null) Destroy(dot);
                     }
+                    
+                    // Beritahu spawner untuk lanjut ke antrean kalimat berikutnya jika ada
+                    if (spawner != null) spawner.LanjutKalimatBerikutnya();
                 }
-                Destroy(currentLine.gameObject);
+                else
+                {
+                    // Jika Salah Susunan, Lepas Freeze! Mereka bakal menyerang lagi
+                    foreach (GameObject dot in connectedDots)
+                    {
+                        if (dot != null)
+                        {
+                            EnemyMovement movement = dot.GetComponent<EnemyMovement>();
+                            if (movement != null) movement.isFrozen = false;
+                        }
+                    }
+                    Debug.Log("Susunan Kalimat Salah! Coba Lagi!");
+                }
             }
             else
             {
+                // Jika cuma klik 1 dot lalu dilepas
                 foreach (GameObject dot in connectedDots)
                 {
                     if (dot != null)
                     {
                         EnemyMovement movement = dot.GetComponent<EnemyMovement>();
-                        if (movement != null)
-                        {
-                            movement.isFrozen = false;
-                        }
+                        if (movement != null) movement.isFrozen = false;
                     }
                 }
-                Destroy(currentLine.gameObject);
             }
 
+            Destroy(currentLine.gameObject);
             currentLine = null;
             lastSelectedDot = null;
             connectedDots.Clear();
         }
+    }
+
+    bool CekApakahKalimatBenar()
+    {
+        if (spawner == null || spawner.dataLevelIni == null) return false;
+        
+        // Ambil kunci jawaban kalimat aktif dari ScriptableObject via Spawner
+        int kalimatIndex = spawner.GetCurrentKalimatIndex(); // Kita butuh fungsi helper ini di Spawner nanti
+        List<string> kunciJawaban = spawner.dataLevelIni.daftarKalimat[kalimatIndex].potonganKataBenar;
+
+        // Jika jumlah kata yang ditarik player tidak sama dengan jumlah kata kunci jawaban, otomatis salah!
+        if (connectedDots.Count != kunciJawaban.Count) return false;
+
+        // Cek urutan katanya satu per satu
+        for (int i = 0; i < connectedDots.Count; i++)
+        {
+            EnemyMovement moveComponent = connectedDots[i].GetComponent<EnemyMovement>();
+            if (moveComponent == null || moveComponent.kataYangDibawa != kunciJawaban[i])
+            {
+                return false; // Ada satu urutan kata yang salah / membawa kata pengecoh
+            }
+        }
+
+        return true; // Urutan 100% Sesuai Kunci Jawaban!
     }
 
     void CreateNewLine(Vector3 startPosition)

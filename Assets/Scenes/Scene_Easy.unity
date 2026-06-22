@@ -2681,6 +2681,9 @@ MonoBehaviour:
   groundLayer:
     serializedVersion: 2
     m_Bits: 8
+  enemyLayer:
+    serializedVersion: 2
+    m_Bits: 128
 --- !u!4 &2066651893
 Transform:
   m_ObjectHideFlags: 0
