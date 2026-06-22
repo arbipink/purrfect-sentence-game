@@ -21,8 +21,25 @@ public class DotConnectManager : MonoBehaviour
     [Header("Layer Settings")]
     public LayerMask groundLayer;
 
+    void Start()
+    {
+        // Memaksa kursor mouse untuk tetap kelihatan dan bebas bergerak di layar
+        Cursor.lockState = CursorLockMode.None;
+        Cursor.visible = true;
+    }
+
     void Update()
     {
+        if (Cursor.lockState != CursorLockMode.None)
+        {
+            Cursor.lockState = CursorLockMode.None;
+        }
+        
+        if (!Cursor.visible)
+        {
+            Cursor.visible = true;
+        }
+        
         var pointer = Pointer.current;
         if (pointer == null) return;
 

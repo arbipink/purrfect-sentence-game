@@ -1,4 +1,5 @@
 using System.Collections;
+using System.Collections.Generic; // BIANG KEROK ERROR 1 SUDAH DIADAKAN DI SINI
 using UnityEngine;
 
 public class EnemySpawner : MonoBehaviour
@@ -8,14 +9,18 @@ public class EnemySpawner : MonoBehaviour
     public float spawnInterval = 2f;
 
     [Header("Area Settings")]
-    public Vector3 minSpawnRange = new Vector3(-10, 0, -10);
-    public Vector3 maxSpawnRange = new Vector3(10, 0, 10);
+    public int maxEnemies = 6;
+    public float minSpawnDistance = 15f; 
+    public float maxSpawnDistance = 25f;
 
     [Tooltip("Radius batas dalam. Musuh TIDAK AKAN spawn di dalam radius ini dari pusat (0,0,0)")]
     public float safeZoneRadius = 3f;
 
     [Header("Enemy Movement")]
     public float enemySpeed = 2f;
+    public Transform playerTransform;
+
+    private List<GameObject> activeEnemies = new List<GameObject>();
 
     void Start()
     {
@@ -27,57 +32,37 @@ public class EnemySpawner : MonoBehaviour
         while (true)
         {
             yield return new WaitForSeconds(spawnInterval);
-            SpawnEnemy();
+
+            activeEnemies.RemoveAll(item => item == null);
+            if (activeEnemies.Count < maxEnemies)
+            {
+                SpawnEnemy();
+            }
         }
     }
 
     void SpawnEnemy()
     {
-        Vector3 spawnPosition = Vector3.zero;
-        bool validPosition = false;
-        int maxAttempts = 10;
-        int attempts = 0;
+        if (playerTransform == null) return;
 
-        while (!validPosition && attempts < maxAttempts)
+        float randomDistance = Random.Range(minSpawnDistance, maxSpawnDistance);
+
+        // Tentukan arah acak melingkar
+        Vector2 randomDirectionInternal = Random.insideUnitCircle.normalized; 
+        Vector3 spawnOffset = new Vector3(randomDirectionInternal.x, 0, randomDirectionInternal.y) * randomDistance;
+
+        // Gabungkan dengan posisi kucing
+        Vector3 spawnPosition = playerTransform.position + spawnOffset;
+        spawnPosition.y = playerTransform.position.y;
+
+        GameObject spawnedEnemy = Instantiate(enemyPrefab, spawnPosition, Quaternion.identity);
+        activeEnemies.Add(spawnedEnemy);
+        
+        EnemyMovement movement = spawnedEnemy.GetComponent<EnemyMovement>();
+        if (movement != null)
         {
-            attempts++;
-
-            float randomX = Random.Range(minSpawnRange.x, maxSpawnRange.x);
-            float randomZ = Random.Range(minSpawnRange.z, maxSpawnRange.z);
-            spawnPosition = new Vector3(randomX, 0f, randomZ);
-
-            if (Vector3.Distance(spawnPosition, Vector3.zero) >= safeZoneRadius)
-            {
-                validPosition = true;
-            }
-        }
-
-        if (validPosition)
-        {
-            GameObject spawnedEnemy = Instantiate(enemyPrefab, spawnPosition, Quaternion.identity);
-
-            EnemyMovement movement = spawnedEnemy.AddComponent<EnemyMovement>();
             movement.speed = enemySpeed;
-        }
-    }
-}
-
-public class EnemyMovement : MonoBehaviour
-{
-    public float speed;
-    [HideInInspector]
-    public bool isFrozen = false;
-    private Vector3 targetPosition = Vector3.zero;
-
-    void Update()
-    {
-        if (isFrozen) return;
-
-        transform.position = Vector3.MoveTowards(transform.position, targetPosition, speed * Time.deltaTime);
-
-        if (Vector3.Distance(transform.position, targetPosition) < 0.1f)
-        {
-            Destroy(gameObject);
+            movement.SetTarget(playerTransform);
         }
     }
 }
