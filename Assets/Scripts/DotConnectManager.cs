@@ -21,7 +21,7 @@ public class DotConnectManager : MonoBehaviour
     [Header("Layer Settings")]
     public LayerMask groundLayer;
     public LayerMask enemyLayer;
-
+    public float clickRadiusPixels = 70f;
     private EnemySpawner spawner;
 
     void Start()
@@ -66,113 +66,90 @@ public class DotConnectManager : MonoBehaviour
         }
     }
 
+    GameObject CariEnemyDiPosisiMouse(Vector2 mousePos)
+    {
+        EnemyMovement[] semuaMusuh = FindObjectsByType<EnemyMovement>(FindObjectsSortMode.None);
+        GameObject musuhTerpilih = null;
+        float jarakTerdekat = clickRadiusPixels;
+
+        foreach (EnemyMovement musuh in semuaMusuh)
+        {
+            if (musuh == null) continue;
+
+            // Konversi posisi 3D musuh menjadi koordinat 2D di layar monitor
+            Vector2 musuhDiLayar = Camera.main.WorldToScreenPoint(musuh.transform.position);
+            float jarak = Vector2.Distance(mousePos, musuhDiLayar);
+
+            if (jarak < jarakTerdekat)
+            {
+                jarakTerdekat = jarak;
+                musuhTerpilih = musuh.gameObject;
+            }
+        }
+        return musuhTerpilih;
+    }
+
     void HandleMouseClick()
     {
         Vector2 mousePosition = Pointer.current.position.ReadValue();
+        GameObject enemyDidekatMouse = CariEnemyDiPosisiMouse(mousePosition);
         
         // 1. Proyeksikan posisi mouse langsung ke ruang 3D sejajar jarak kedalaman kamera
         // Kita hitung jarak antara kamera dan target jamur (menggunakan estimasi jarak konstan)
-        float targetZDepth = 15f; // Estimasi jarak horizontal dari Main Camera ke jalanan kucing
         
-        if (lastSelectedDot != null)
+        if (enemyDidekatMouse != null)
         {
-            targetZDepth = Mathf.Abs(Camera.main.transform.position.z - lastSelectedDot.transform.position.z);
-        }
-        else
-        {
-            // Jika belum ada dot yang dipilih, cari jamur pertama di scene untuk patokan jarak Z
-            EnemyMovement sampleEnemy = FindFirstObjectByType<EnemyMovement>();
-            if (sampleEnemy != null)
-            {
-                targetZDepth = Mathf.Abs(Camera.main.transform.position.z - sampleEnemy.transform.position.z);
-            }
-        }
+            lastSelectedDot = enemyDidekatMouse;
+            connectedDots.Clear();
+            connectedDots.Add(lastSelectedDot);
 
-        Vector3 screenToWorldPoint = Camera.main.ScreenToWorldPoint(new Vector3(mousePosition.x, mousePosition.y, targetZDepth));
+            EnemyMovement movement = lastSelectedDot.GetComponent<EnemyMovement>();
+            if (movement != null) movement.isFrozen = true;
 
-        // 2. Gunakan OverlapSphere di titik proyeksi tersebut untuk menangkap Collider musuh
-        // Radius 2.0f agar area klik mouse sedikit lebih luas dan toleran terhadap sentuhan player
-        Collider[] hitColliders = Physics.OverlapSphere(screenToWorldPoint, 2.0f, enemyLayer.value);
-
-        if (hitColliders.Length > 0)
-        {
-            Collider enemyCollider = hitColliders[0];
-
-            if (enemyCollider.CompareTag("Enemy"))
-            {
-                lastSelectedDot = enemyCollider.gameObject;
-
-                connectedDots.Clear();
-                connectedDots.Add(lastSelectedDot);
-
-                EnemyMovement movement = lastSelectedDot.GetComponent<EnemyMovement>();
-                if (movement != null)
-                {
-                    movement.isFrozen = true;
-                }
-
-                Vector3 startPos = lastSelectedDot.transform.position;
-                startPos.y += lineHoverOffset;
-
-                CreateNewLine(startPos);
-            }
+            Vector3 startPos = lastSelectedDot.transform.position;
+            startPos.y += lineHoverOffset;
+            CreateNewLine(startPos);
         }
     }
 
     void HandleMouseDrag()
     {
         Vector2 mousePosition = Pointer.current.position.ReadValue();
-        
-        float targetZDepth = 15f;
-        if (lastSelectedDot != null)
+        GameObject enemyDidekatMouse = CariEnemyDiPosisiMouse(mousePosition);
+
+        if (enemyDidekatMouse != null && !connectedDots.Contains(enemyDidekatMouse))
         {
-            targetZDepth = Mathf.Abs(Camera.main.transform.position.z - lastSelectedDot.transform.position.z);
-        }
+            GameObject currentDot = enemyDidekatMouse;
 
-        Vector3 screenToWorldPoint = Camera.main.ScreenToWorldPoint(new Vector3(mousePosition.x, mousePosition.y, targetZDepth));
+            EnemyMovement movement = currentDot.GetComponent<EnemyMovement>();
+            if (movement != null) movement.isFrozen = true;
 
-        Collider[] hitColliders = Physics.OverlapSphere(screenToWorldPoint, 2.0f, enemyLayer.value);
+            Vector3 dotPos = currentDot.transform.position;
+            dotPos.y += lineHoverOffset;
 
-        if (hitColliders.Length > 0)
-        {
-            Collider enemyCollider = hitColliders[0];
+            linePoints.Add(dotPos);
+            currentLine.positionCount = linePoints.Count;
+            currentLine.SetPosition(linePoints.Count - 1, dotPos);
 
-            if (enemyCollider.CompareTag("Enemy") && !connectedDots.Contains(enemyCollider.gameObject))
-            {
-                GameObject currentDot = enemyCollider.gameObject;
-
-                EnemyMovement movement = currentDot.GetComponent<EnemyMovement>();
-                if (movement != null)
-                {
-                    movement.isFrozen = true;
-                }
-
-                Vector3 dotPos = currentDot.transform.position;
-                dotPos.y += lineHoverOffset;
-
-                linePoints.Add(dotPos);
-                currentLine.positionCount = linePoints.Count;
-                currentLine.SetPosition(linePoints.Count - 1, dotPos);
-
-                lastSelectedDot = currentDot;
-                connectedDots.Add(currentDot);
-            }
+            lastSelectedDot = currentDot;
+            connectedDots.Add(currentDot);
         }
 
         if (currentLine == null) return;
 
-        // Untuk visual penarikan garis di tanah tetap gunakan ground raycast standar agar menempel rapi
+        // Visualisasi penarikan ujung tali dinamis mengikuti kursor di atas tanah
         Ray ray = Camera.main.ScreenPointToRay(mousePosition);
         RaycastHit hit;
         Vector3 mouseWorldPos;
-        
+
         if (Physics.Raycast(ray, out hit, Mathf.Infinity, groundLayer.value))
         {
             mouseWorldPos = hit.point + (Vector3.up * lineHoverOffset);
         }
         else
         {
-            mouseWorldPos = screenToWorldPoint + (Vector3.up * lineHoverOffset);
+            float targetZDepth = Mathf.Abs(Camera.main.transform.position.z - lastSelectedDot.transform.position.z);
+            mouseWorldPos = Camera.main.ScreenToWorldPoint(new Vector3(mousePosition.x, mousePosition.y, targetZDepth)) + (Vector3.up * lineHoverOffset);
         }
 
         currentLine.positionCount = linePoints.Count + 1;
@@ -213,7 +190,6 @@ public class DotConnectManager : MonoBehaviour
             }
             else
             {
-                // Jika cuma klik 1 dot lalu dilepas
                 foreach (GameObject dot in connectedDots)
                 {
                     if (dot != null)
@@ -261,6 +237,7 @@ public class DotConnectManager : MonoBehaviour
         linePoints.Add(startPosition);
 
         GameObject lineObj = new GameObject("Line_" + System.DateTime.Now.Ticks);
+        lineObj.transform.position = startPosition;
         currentLine = lineObj.AddComponent<LineRenderer>();
 
         currentLine.material = lineMaterial != null ? lineMaterial : new Material(Shader.Find("Sprites/Default"));

@@ -7,8 +7,8 @@ public class EnemyMovement : MonoBehaviour
     [HideInInspector]
     public bool isFrozen = false;
 
-    public string kataYangDibawa; // Variabel penampung kata
-    public TextMeshProUGUI textMeshComponent; // Slot untuk drag komponen teksnya
+    public string kataYangDibawa; 
+    public TextMeshProUGUI textMeshComponent; 
     
     private Transform playerTarget;
 
@@ -39,7 +39,8 @@ public class EnemyMovement : MonoBehaviour
             Transform canvasTransform = textMeshComponent.canvas.transform;
             
             // Putar Canvas agar selalu lurus menghadap Main Camera kamu
-            canvasTransform.rotation = Quaternion.LookRotation(canvasTransform.position - Camera.main.transform.position);
+            //canvasTransform.rotation = Quaternion.LookRotation(canvasTransform.position - Camera.main.transform.position);
+            canvasTransform.rotation = Quaternion.Euler(0f, 90f, 0f);
         }
         if (Vector3.Distance(transform.position, playerTarget.position) < 1.0f)
         {

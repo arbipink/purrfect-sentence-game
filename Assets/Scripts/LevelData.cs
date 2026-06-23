@@ -18,7 +18,4 @@ public class LevelData : ScriptableObject
     [Header("Daftar Kalimat di Level Ini")]
     public List<Kalimat> daftarKalimat;
 
-    [Header("Bank Kata Pengecoh")]
-    [Tooltip("Kata-kata salah yang bakal dibawa jamur buat ngebingungin player")]
-    public List<string> kataPengecoh;
 }
