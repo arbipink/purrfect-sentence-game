@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class EnemySpawner : MonoBehaviour
 {
@@ -14,7 +15,7 @@ public class EnemySpawner : MonoBehaviour
     public float maxSpawnDistance = 25f;
 
     [Header("Enemy Movement")]
-    public float enemySpeed = 2f;
+    // public float enemySpeed = 2f;
     public Transform playerTransform;
     public LevelData dataLevelIni; 
     private int indexKalimatAktif = 0; 
@@ -89,31 +90,33 @@ public class EnemySpawner : MonoBehaviour
         Vector3 spawnDirection = Vector3.zero;
         float randomChance = Random.Range(0f, 100f);
 
-        if (randomChance < 40f)
+        if (randomChance < 50f)
         {
-            spawnDirection = new Vector3(Random.Range(-1f, 1f), 0f, -1f).normalized;
+            Vector3 keBelakang = -playerTransform.forward;
+            Vector3 variasiSamping = playerTransform.right * Random.Range(-0.5f, 0.5f);
+            spawnDirection = (keBelakang + variasiSamping).normalized;
         }
         else if (randomChance < 70f)
         {
-            spawnDirection = new Vector3(-1f, 0f, Random.Range(-0.5f, 0.5f)).normalized;
+            spawnDirection = -playerTransform.right;
         }
         else
         {
-            spawnDirection = new Vector3(1f, 0f, Random.Range(-0.5f, 0.5f)).normalized;
+            spawnDirection = playerTransform.right;
         }
 
         Vector3 spawnOffset = spawnDirection * randomDistance;
         Vector3 spawnPosition = playerTransform.position + spawnOffset;
         spawnPosition.y = playerTransform.position.y;
 
-        // 6. Lahirkan musuhnya!
+        // Spawn Musuh
         GameObject spawnedEnemy = Instantiate(enemyPrefab, spawnPosition, Quaternion.identity);
         activeEnemies.Add(spawnedEnemy);
         
         EnemyMovement movement = spawnedEnemy.GetComponent<EnemyMovement>();
         if (movement != null)
         {
-            movement.speed = enemySpeed;
+            // movement.speed = enemySpeed;
             movement.kataYangDibawa = kataUntukJamur; // Kirim kata yang unik
             movement.SetTarget(playerTransform);
         }
@@ -131,6 +134,8 @@ public class EnemySpawner : MonoBehaviour
         if (indexKalimatAktif >= dataLevelIni.daftarKalimat.Count)
         {
             Debug.Log("SEMUA KALIMAT SELESAI! LEVEL CLEAR!");
+
+            Invoke("OnLevelClear", 2f);
         }
         else
         {
@@ -141,5 +146,11 @@ public class EnemySpawner : MonoBehaviour
             }
             activeEnemies.Clear();
         }
+    }
+
+    void OnLevelClear()
+    {
+        // SceneManager.LoadScene("Scene_Medium");
+        SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex + 1);
     }
 }

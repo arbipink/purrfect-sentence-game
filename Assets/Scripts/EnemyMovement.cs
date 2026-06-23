@@ -37,10 +37,21 @@ public class EnemyMovement : MonoBehaviour
 {
             // Ambil transform milik Canvas (induk dari objek teks)
             Transform canvasTransform = textMeshComponent.canvas.transform;
+
+            string namaSceneAktif = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name;
             
-            // Putar Canvas agar selalu lurus menghadap Main Camera kamu
-            //canvasTransform.rotation = Quaternion.LookRotation(canvasTransform.position - Camera.main.transform.position);
-            canvasTransform.rotation = Quaternion.Euler(0f, 90f, 0f);
+            if (namaSceneAktif == "Scene_Medium")
+            {
+                canvasTransform.rotation = Quaternion.Euler(0f, 0f, 0f); 
+            }
+            else if (namaSceneAktif == "Scene_Easy")
+            {
+                canvasTransform.rotation = Quaternion.Euler(0f, 90f, 0f); 
+            }
+            else
+            {
+                canvasTransform.rotation = Quaternion.Euler(0f, -90f, 0f);
+            }
         }
         if (Vector3.Distance(transform.position, playerTarget.position) < 1.0f)
         {
