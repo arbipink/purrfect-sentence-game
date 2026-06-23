@@ -165,7 +165,7 @@ public class DotConnectManager : MonoBehaviour
                 // --- LOGIKA VALIDASI KALIMAT ---
                 if (CekApakahKalimatBenar())
                 {
-                    // Jika Benar, Lenyapkan Jamur!
+                    
                     foreach (GameObject dot in connectedDots)
                     {
                         if (dot != null) Destroy(dot);
@@ -176,7 +176,7 @@ public class DotConnectManager : MonoBehaviour
                 }
                 else
                 {
-                    // Jika Salah Susunan, Lepas Freeze! Mereka bakal menyerang lagi
+                    // Jika salah susunan, lepas freeze, Mereka bakal menyerang lagi
                     foreach (GameObject dot in connectedDots)
                     {
                         if (dot != null)
@@ -224,7 +224,7 @@ public class DotConnectManager : MonoBehaviour
             EnemyMovement moveComponent = connectedDots[i].GetComponent<EnemyMovement>();
             if (moveComponent == null || moveComponent.kataYangDibawa != kunciJawaban[i])
             {
-                return false; // Ada satu urutan kata yang salah / membawa kata pengecoh
+                return false;
             }
         }
 

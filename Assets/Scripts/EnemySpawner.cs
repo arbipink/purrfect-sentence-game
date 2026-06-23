@@ -46,11 +46,11 @@ public class EnemySpawner : MonoBehaviour
         if (playerTransform == null || dataLevelIni == null) return;
         if (indexKalimatAktif >= dataLevelIni.daftarKalimat.Count) return;
 
-        // 1. Ambil semua potongan kata benar untuk kalimat saat ini
+        // Mengambil semua potongan kata benar untuk kalimat saat ini
         List<string> semuaKataBenar = dataLevelIni.daftarKalimat[indexKalimatAktif].potonganKataBenar;
         if (semuaKataBenar == null || semuaKataBenar.Count == 0) return;
 
-        // 2. Buat daftar kata yang SAAT INI SUDAH ADA di layar game
+        // Memuat daftar kata yang saat ini sudah ada di layar game
         List<string> kataYangSudahAdaDiLayar = new List<string>();
         foreach (GameObject enemy in activeEnemies)
         {
@@ -64,7 +64,7 @@ public class EnemySpawner : MonoBehaviour
             }
         }
 
-        // 3. Cari kata apa saja yang belum ada di layar (Kata Tersedia)
+        // Mencari kata apa saja yang belum ada di layar (Kata Tersedia)
         List<string> kataYangBelumSpawn = new List<string>();
         foreach (string kata in semuaKataBenar)
         {
@@ -74,18 +74,18 @@ public class EnemySpawner : MonoBehaviour
             }
         }
 
-        // 4. Jika SEMUA KATA sudah lahir di layar, kita stop spawn biar tidak ada duplikasi!
+        // Jika semua kata sudah spawn di layar, stop spawn biar tidak ada duplikasi
         if (kataYangBelumSpawn.Count == 0)
         {
             // Debug.Log("Semua kata dari kalimat ini sudah ada di layar. Menunggu player menarik garis...");
             return; 
         }
 
-        // 5. Pilih satu kata secara acak dari daftar kata yang BELUM SPAWN tadi
+        // Pilih satu kata secara acak dari daftar kata yang BELUM SPAWN tadi
         string kataUntukJamur = kataYangBelumSpawn[Random.Range(0, kataYangBelumSpawn.Count)];
 
 
-        // --- Logika kalkulasi posisi spawn di samping/belakang (Tetap Aman) ---
+        // ## Logika kalkulasi posisi spawn di samping/belakang
         float randomDistance = Random.Range(minSpawnDistance, maxSpawnDistance);
         Vector3 spawnDirection = Vector3.zero;
         float randomChance = Random.Range(0f, 100f);
@@ -117,7 +117,7 @@ public class EnemySpawner : MonoBehaviour
         if (movement != null)
         {
             // movement.speed = enemySpeed;
-            movement.kataYangDibawa = kataUntukJamur; // Kirim kata yang unik
+            movement.kataYangDibawa = kataUntukJamur;
             movement.SetTarget(playerTransform);
         }
     }
