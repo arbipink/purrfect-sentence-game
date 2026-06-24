@@ -12,7 +12,7 @@ GameObject:
   - component: {fileID: 5820337491546207460}
   - component: {fileID: 2226456223845475998}
   - component: {fileID: 6128933811969936965}
-  m_Layer: 5
+  m_Layer: 7
   m_Name: Canvas
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -114,7 +114,7 @@ GameObject:
   - component: {fileID: 5019887238596623694}
   - component: {fileID: 6439939421406321979}
   - component: {fileID: 544332360463171031}
-  m_Layer: 5
+  m_Layer: 7
   m_Name: Text Kata
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -288,13 +288,57 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: -8366358690053156200, guid: 7a5e9fdef6ec86d4c9385be69bd043ea, type: 3}
+      propertyPath: m_Layer
+      value: 7
+      objectReference: {fileID: 0}
+    - target: {fileID: -8068685255650976656, guid: 7a5e9fdef6ec86d4c9385be69bd043ea, type: 3}
+      propertyPath: m_Layer
+      value: 7
+      objectReference: {fileID: 0}
+    - target: {fileID: -5986407129120631687, guid: 7a5e9fdef6ec86d4c9385be69bd043ea, type: 3}
+      propertyPath: m_Layer
+      value: 7
+      objectReference: {fileID: 0}
+    - target: {fileID: -5500398069236439516, guid: 7a5e9fdef6ec86d4c9385be69bd043ea, type: 3}
+      propertyPath: m_Layer
+      value: 7
+      objectReference: {fileID: 0}
+    - target: {fileID: -3409733854217683049, guid: 7a5e9fdef6ec86d4c9385be69bd043ea, type: 3}
+      propertyPath: m_Layer
+      value: 7
+      objectReference: {fileID: 0}
+    - target: {fileID: -3325181782226859361, guid: 7a5e9fdef6ec86d4c9385be69bd043ea, type: 3}
+      propertyPath: m_Layer
+      value: 7
+      objectReference: {fileID: 0}
+    - target: {fileID: 128545837876844002, guid: 7a5e9fdef6ec86d4c9385be69bd043ea, type: 3}
+      propertyPath: m_Layer
+      value: 7
+      objectReference: {fileID: 0}
     - target: {fileID: 919132149155446097, guid: 7a5e9fdef6ec86d4c9385be69bd043ea, type: 3}
       propertyPath: m_Name
       value: Enemy_Mushroom
       objectReference: {fileID: 0}
     - target: {fileID: 919132149155446097, guid: 7a5e9fdef6ec86d4c9385be69bd043ea, type: 3}
+      propertyPath: m_Layer
+      value: 7
+      objectReference: {fileID: 0}
+    - target: {fileID: 919132149155446097, guid: 7a5e9fdef6ec86d4c9385be69bd043ea, type: 3}
       propertyPath: m_TagString
       value: Enemy
+      objectReference: {fileID: 0}
+    - target: {fileID: 5844622625683270731, guid: 7a5e9fdef6ec86d4c9385be69bd043ea, type: 3}
+      propertyPath: m_Layer
+      value: 7
+      objectReference: {fileID: 0}
+    - target: {fileID: 6076782462519654784, guid: 7a5e9fdef6ec86d4c9385be69bd043ea, type: 3}
+      propertyPath: m_Layer
+      value: 7
+      objectReference: {fileID: 0}
+    - target: {fileID: 7080555798790206911, guid: 7a5e9fdef6ec86d4c9385be69bd043ea, type: 3}
+      propertyPath: m_Layer
+      value: 7
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -346,12 +390,12 @@ BoxCollider:
     serializedVersion: 2
     m_Bits: 0
   m_LayerOverridePriority: 0
-  m_IsTrigger: 0
+  m_IsTrigger: 1
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 1.1352588, y: 2.27596, z: 1}
-  m_Center: {x: 0.06762982, y: 0.63798, z: 2.5455638e-10}
+  m_Size: {x: 1.3840505, y: 2.27596, z: 1.1020252}
+  m_Center: {x: 0.022055628, y: 0.63798, z: 0.051012695}
 --- !u!4 &2110802812293689044 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: 7a5e9fdef6ec86d4c9385be69bd043ea, type: 3}

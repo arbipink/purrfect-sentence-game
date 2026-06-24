@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class EnemySpawner : MonoBehaviour
 {
@@ -13,14 +14,11 @@ public class EnemySpawner : MonoBehaviour
     public float minSpawnDistance = 15f; 
     public float maxSpawnDistance = 25f;
 
-    [Tooltip("Radius batas dalam. Musuh TIDAK AKAN spawn di dalam radius ini dari pusat (0,0,0)")]
-    public float safeZoneRadius = 3f;
-
     [Header("Enemy Movement")]
-    public float enemySpeed = 2f;
+    // public float enemySpeed = 2f;
     public Transform playerTransform;
-    public LevelData dataLevelIni; // Variabel penampung ScriptableObject
-    private int indexKalimatAktif = 0; // Variabel pencatat antrean kalimat saat ini
+    public LevelData dataLevelIni; 
+    private int indexKalimatAktif = 0; 
 
     private List<GameObject> activeEnemies = new List<GameObject>();
 
@@ -48,87 +46,111 @@ public class EnemySpawner : MonoBehaviour
         if (playerTransform == null || dataLevelIni == null) return;
         if (indexKalimatAktif >= dataLevelIni.daftarKalimat.Count) return;
 
-        string kataUntukJamur = "";
+        // Mengambil semua potongan kata benar untuk kalimat saat ini
+        List<string> semuaKataBenar = dataLevelIni.daftarKalimat[indexKalimatAktif].potonganKataBenar;
+        if (semuaKataBenar == null || semuaKataBenar.Count == 0) return;
 
-        // 1. Ambil data kata benar dan kata pengecoh
-        List<string> kataBenar = dataLevelIni.daftarKalimat[indexKalimatAktif].potonganKataBenar;
-        List<string> kataSalah = dataLevelIni.kataPengecoh;
-
-        bool wajibKataBenar = false;
-
-        bool kataPertamaSudahAda = false;
+        // Memuat daftar kata yang saat ini sudah ada di layar game
+        List<string> kataYangSudahAdaDiLayar = new List<string>();
         foreach (GameObject enemy in activeEnemies)
         {
             if (enemy != null)
             {
                 EnemyMovement em = enemy.GetComponent<EnemyMovement>();
-                if (em != null && kataBenar.Count > 0 && em.kataYangDibawa == kataBenar[0])
+                if (em != null && !string.IsNullOrEmpty(em.kataYangDibawa))
                 {
-                    kataPertamaSudahAda = true;
-                    break;
+                    kataYangSudahAdaDiLayar.Add(em.kataYangDibawa);
                 }
             }
         }
 
-        // Jika kata pertama di kalimat BELUM ADA sama sekali di layar, paksa jamur ini bawa kata pertama itu!
-        if (!kataPertamaSudahAda && kataBenar.Count > 0)
+        // Mencari kata apa saja yang belum ada di layar (Kata Tersedia)
+        List<string> kataYangBelumSpawn = new List<string>();
+        foreach (string kata in semuaKataBenar)
         {
-            kataUntukJamur = kataBenar[0]; // Kunci ke kata pertama (misal: "Saya")
+            if (!kataYangSudahAdaDiLayar.Contains(kata))
+            {
+                kataYangBelumSpawn.Add(kata);
+            }
+        }
+
+        // Jika semua kata sudah spawn di layar, stop spawn biar tidak ada duplikasi
+        if (kataYangBelumSpawn.Count == 0)
+        {
+            // Debug.Log("Semua kata dari kalimat ini sudah ada di layar. Menunggu player menarik garis...");
+            return; 
+        }
+
+        // Pilih satu kata secara acak dari daftar kata yang BELUM SPAWN tadi
+        string kataUntukJamur = kataYangBelumSpawn[Random.Range(0, kataYangBelumSpawn.Count)];
+
+
+        // ## Logika kalkulasi posisi spawn di samping/belakang
+        float randomDistance = Random.Range(minSpawnDistance, maxSpawnDistance);
+        Vector3 spawnDirection = Vector3.zero;
+        float randomChance = Random.Range(0f, 100f);
+
+        if (randomChance < 50f)
+        {
+            Vector3 keBelakang = -playerTransform.forward;
+            Vector3 variasiSamping = playerTransform.right * Random.Range(-0.5f, 0.5f);
+            spawnDirection = (keBelakang + variasiSamping).normalized;
+        }
+        else if (randomChance < 70f)
+        {
+            spawnDirection = -playerTransform.right;
         }
         else
         {
-            // Jika kata pertama sudah ada, baru kita gacha sisanya agar ada tantangan
-            float chance = Random.Range(0f, 100f);
-
-            if (kataSalah != null && kataSalah.Count > 0 && chance < 40f) // 40% peluang pengecoh
-            {
-                kataUntukJamur = kataSalah[Random.Range(0, kataSalah.Count)];
-            }
-            else
-            {
-                // Ambil kata benar sisanya secara acak agar layar ramai kata kunci
-                kataUntukJamur = kataBenar[Random.Range(0, kataBenar.Count)];
-            }
-        }
-
-        float randomDistance = Random.Range(minSpawnDistance, maxSpawnDistance);
-
-        // --- LOGIKA BARU: MEMBATASI SPAWN DI DEPAN ---
-        Vector3 spawnDirection = Vector3.zero;
-        bool validDirection = false;
-
-        // Lakukan looping sampai dapet arah yang BUKAN di depan kucing
-        while (!validDirection)
-        {
-            Vector2 randomPoint = Random.insideUnitCircle.normalized;
-            spawnDirection = new Vector3(randomPoint.x, 0, randomPoint.y);
-
-            // Cek sudut antara arah spawn dengan arah hadap Kucing (playerTransform.forward)
-            float angle = Vector3.Angle(playerTransform.forward, spawnDirection);
-
-            // Jika sudutnya lebih besar dari 60 derajat (artinya dia ada di samping atau belakang, bukan depan pas)
-            if (angle > 60f) 
-            {
-                validDirection = true;
-            }
+            spawnDirection = playerTransform.right;
         }
 
         Vector3 spawnOffset = spawnDirection * randomDistance;
-        // Gabungkan dengan posisi kucing
         Vector3 spawnPosition = playerTransform.position + spawnOffset;
         spawnPosition.y = playerTransform.position.y;
 
+        // Spawn Musuh
         GameObject spawnedEnemy = Instantiate(enemyPrefab, spawnPosition, Quaternion.identity);
         activeEnemies.Add(spawnedEnemy);
         
         EnemyMovement movement = spawnedEnemy.GetComponent<EnemyMovement>();
         if (movement != null)
         {
-            movement.speed = enemySpeed;
+            // movement.speed = enemySpeed;
             movement.kataYangDibawa = kataUntukJamur;
             movement.SetTarget(playerTransform);
         }
+    }
 
+    public int GetCurrentKalimatIndex()
+    {
+        return indexKalimatAktif;
+    }
 
+    public void LanjutKalimatBerikutnya()
+    {
+        indexKalimatAktif++;
+        
+        if (indexKalimatAktif >= dataLevelIni.daftarKalimat.Count)
+        {
+            Debug.Log("SEMUA KALIMAT SELESAI! LEVEL CLEAR!");
+
+            Invoke("OnLevelClear", 2f);
+        }
+        else
+        {
+            Debug.Log("Kalimat sukses! Bersihkan sisa musuh dan lanjut ke kalimat berikutnya...");
+            foreach (var enemy in activeEnemies) 
+            { 
+                if (enemy != null) Destroy(enemy); 
+            }
+            activeEnemies.Clear();
+        }
+    }
+
+    void OnLevelClear()
+    {
+        // SceneManager.LoadScene("Scene_Medium");
+        SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex + 1);
     }
 }
