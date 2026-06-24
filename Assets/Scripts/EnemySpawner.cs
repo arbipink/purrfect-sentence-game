@@ -14,6 +14,7 @@ public class EnemySpawner : MonoBehaviour
     public int maxEnemies = 6;
     public float minSpawnDistance = 15f; 
     public float maxSpawnDistance = 25f;
+    public float minDistanceBetweenEnemies = 8f;
 
     [Header("Enemy Movement")]
     public Transform playerTransform;
@@ -93,48 +94,85 @@ public class EnemySpawner : MonoBehaviour
         // Pick a random word from the list of words that have not yet spawned
         string wordForMushroom = wordsNotYetSpawned[Random.Range(0, wordsNotYetSpawned.Count)];
 
-        // ## Logic to calculate spawn position on sides or behind the player
-        float randomDistance = Random.Range(minSpawnDistance, maxSpawnDistance);
-        Vector3 spawnDirection = Vector3.zero;
-        float randomChance = Random.Range(0f, 100f);
+        // ## Logic to calculate spawn position on sides or behind the player with collision/proximity check
+        Vector3 spawnPosition = Vector3.zero;
+        int maxAttempts = 30;
+        bool foundPosition = false;
 
-        if (randomChance < 50f)
+        for (int attempt = 0; attempt < maxAttempts; attempt++)
         {
-            Vector3 backwardDirection = -playerTransform.forward;
-            Vector3 sideOffset = playerTransform.right * Random.Range(-0.5f, 0.5f);
-            spawnDirection = (backwardDirection + sideOffset).normalized;
-        }
-        else if (randomChance < 70f)
-        {
-            spawnDirection = -playerTransform.right;
-        }
-        else
-        {
-            spawnDirection = playerTransform.right;
+            float randomDistance = Random.Range(minSpawnDistance, maxSpawnDistance);
+            Vector3 spawnDirection = Vector3.zero;
+            float randomChance = Random.Range(0f, 100f);
+
+            if (randomChance < 50f)
+            {
+                Vector3 backwardDirection = -playerTransform.forward;
+                Vector3 sideOffset = playerTransform.right * Random.Range(-0.5f, 0.5f);
+                spawnDirection = (backwardDirection + sideOffset).normalized;
+            }
+            else if (randomChance < 70f)
+            {
+                spawnDirection = -playerTransform.right;
+            }
+            else
+            {
+                spawnDirection = playerTransform.right;
+            }
+
+            Vector3 spawnOffset = spawnDirection * randomDistance;
+            Vector3 candidatePosition = playerTransform.position + spawnOffset;
+
+            // Raycast down to find ground height at candidate position
+            float raycastStartHeight = candidatePosition.y + 10f;
+            Vector3 rayOrigin = new Vector3(candidatePosition.x, raycastStartHeight, candidatePosition.z);
+
+            LayerMask mask = LayerMask.GetMask("Ground");
+            DotConnectManager dcm = FindAnyObjectByType<DotConnectManager>();
+            if (dcm != null)
+            {
+                mask = dcm.groundLayer;
+            }
+
+            RaycastHit hit;
+            if (Physics.Raycast(rayOrigin, Vector3.down, out hit, 30f, mask.value))
+            {
+                candidatePosition.y = hit.point.y;
+            }
+            else
+            {
+                candidatePosition.y = playerTransform.position.y;
+            }
+
+            // Verify if candidatePosition is far enough from all existing active enemies in X or Z axis
+            bool tooCloseToAny = false;
+            foreach (GameObject enemy in activeEnemies)
+            {
+                if (enemy == null) continue;
+
+                float diffX = Mathf.Abs(candidatePosition.x - enemy.transform.position.x);
+                float diffZ = Mathf.Abs(candidatePosition.z - enemy.transform.position.z);
+
+                // If close in both X and Z, they are too close to each other
+                if (diffX < minDistanceBetweenEnemies && diffZ < minDistanceBetweenEnemies)
+                {
+                    tooCloseToAny = true;
+                    break;
+                }
+            }
+
+            spawnPosition = candidatePosition;
+
+            if (!tooCloseToAny)
+            {
+                foundPosition = true;
+                break;
+            }
         }
 
-        Vector3 spawnOffset = spawnDirection * randomDistance;
-        Vector3 spawnPosition = playerTransform.position + spawnOffset;
-        
-        // Raycast down to find ground height at spawn position
-        float raycastStartHeight = spawnPosition.y + 10f;
-        Vector3 rayOrigin = new Vector3(spawnPosition.x, raycastStartHeight, spawnPosition.z);
-        
-        LayerMask mask = LayerMask.GetMask("Ground");
-        DotConnectManager dcm = FindAnyObjectByType<DotConnectManager>();
-        if (dcm != null)
+        if (!foundPosition)
         {
-            mask = dcm.groundLayer;
-        }
-
-        RaycastHit hit;
-        if (Physics.Raycast(rayOrigin, Vector3.down, out hit, 30f, mask.value))
-        {
-            spawnPosition.y = hit.point.y;
-        }
-        else
-        {
-            spawnPosition.y = playerTransform.position.y;
+            Debug.LogWarning("Could not find a spawn position far enough from other enemies. Spawning anyway.");
         }
 
         // Spawn Enemy
