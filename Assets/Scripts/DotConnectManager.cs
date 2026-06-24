@@ -18,6 +18,9 @@ public class DotConnectManager : MonoBehaviour
     [Tooltip("Slightly lift the line above the ground to avoid z-fighting / flickering")]
     public float lineHoverOffset = 0.25f;
 
+    [Tooltip("Minimum distance in world space before adding a new segment to the freehand line")]
+    public float minDrawSegmentDistance = 0.2f;
+
     [Header("Layer Settings")]
     public LayerMask groundLayer;
     public LayerMask enemyLayer;
@@ -128,8 +131,6 @@ public class DotConnectManager : MonoBehaviour
             dotPos.y += lineHoverOffset;
 
             linePoints.Add(dotPos);
-            currentLine.positionCount = linePoints.Count;
-            currentLine.SetPosition(linePoints.Count - 1, dotPos);
 
             lastSelectedDot = currentDot;
             connectedDots.Add(currentDot);
@@ -152,7 +153,22 @@ public class DotConnectManager : MonoBehaviour
             mouseWorldPos = Camera.main.ScreenToWorldPoint(new Vector3(mousePosition.x, mousePosition.y, targetZDepth)) + (Vector3.up * lineHoverOffset);
         }
 
+        // Add intermediate points to linePoints if the mouse has moved far enough from the last point
+        if (linePoints.Count > 0)
+        {
+            float dist = Vector3.Distance(mouseWorldPos, linePoints[linePoints.Count - 1]);
+            if (dist > minDrawSegmentDistance)
+            {
+                linePoints.Add(mouseWorldPos);
+            }
+        }
+
+        // Render the permanent points plus the current mouse position as the last point
         currentLine.positionCount = linePoints.Count + 1;
+        for (int i = 0; i < linePoints.Count; i++)
+        {
+            currentLine.SetPosition(i, linePoints[i]);
+        }
         currentLine.SetPosition(linePoints.Count, mouseWorldPos);
     }
 
