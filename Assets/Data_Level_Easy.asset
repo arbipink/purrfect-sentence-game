@@ -12,9 +12,19 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 519b3dc2dbeb29f4caa7ea1f79a45785, type: 3}
   m_Name: Data_Level_Easy
   m_EditorClassIdentifier: Assembly-CSharp::LevelData
-  daftarKalimat:
-  - teksLengkap: Saya Makan Nasi
-    potonganKataBenar:
+  sentences:
+  - fullText: Saya Makan Nasi
+    correctWordFragments:
     - Saya
     - Makan
     - Nasi
+  - fullText: Ayah Mencuci Mobil
+    correctWordFragments:
+    - Ayah
+    - Mencuci
+    - Mobil
+  - fullText: Bimo Membaca Buku
+    correctWordFragments:
+    - Ayah
+    - Mencuci
+    - Mobil

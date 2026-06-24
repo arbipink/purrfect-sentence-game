@@ -115,7 +115,27 @@ public class EnemySpawner : MonoBehaviour
 
         Vector3 spawnOffset = spawnDirection * randomDistance;
         Vector3 spawnPosition = playerTransform.position + spawnOffset;
-        spawnPosition.y = playerTransform.position.y;
+        
+        // Raycast down to find ground height at spawn position
+        float raycastStartHeight = spawnPosition.y + 10f;
+        Vector3 rayOrigin = new Vector3(spawnPosition.x, raycastStartHeight, spawnPosition.z);
+        
+        LayerMask mask = LayerMask.GetMask("Ground");
+        DotConnectManager dcm = FindAnyObjectByType<DotConnectManager>();
+        if (dcm != null)
+        {
+            mask = dcm.groundLayer;
+        }
+
+        RaycastHit hit;
+        if (Physics.Raycast(rayOrigin, Vector3.down, out hit, 30f, mask.value))
+        {
+            spawnPosition.y = hit.point.y;
+        }
+        else
+        {
+            spawnPosition.y = playerTransform.position.y;
+        }
 
         // Spawn Enemy
         GameObject spawnedEnemy = Instantiate(enemyPrefab, spawnPosition, Quaternion.identity);

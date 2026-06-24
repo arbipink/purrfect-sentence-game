@@ -16,7 +16,7 @@ public class DotConnectManager : MonoBehaviour
     public Color lineColor = Color.yellow;
 
     [Tooltip("Slightly lift the line above the ground to avoid z-fighting / flickering")]
-    public float lineHoverOffset = 0.05f;
+    public float lineHoverOffset = 0.25f;
 
     [Header("Layer Settings")]
     public LayerMask groundLayer;
