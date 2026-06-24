@@ -5800,8 +5800,7 @@ MonoBehaviour:
   spawnInterval: 1
   maxEnemies: 6
   minSpawnDistance: 25
-  maxSpawnDistance: 35
-  enemySpeed: 3
+  maxSpawnDistance: 25
   playerTransform: {fileID: 2026517671}
   dataLevelIni: {fileID: 11400000, guid: 4d27d80d4b9e9bf48ae695b39390c69d, type: 2}
 --- !u!114 &1167274411
@@ -9215,13 +9214,13 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2018271272}
   serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalRotation: {x: 0.3987491, y: 0, z: 0, w: 0.91706014}
+  m_LocalPosition: {x: 0, y: 10, z: -6}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_LocalEulerAnglesHint: {x: 47, y: 0, z: 0}
 --- !u!95 &2018271279
 Animator:
   serializedVersion: 7

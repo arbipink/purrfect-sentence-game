@@ -1,21 +1,24 @@
 using UnityEngine;
-using System.Collections;
 using System.Collections.Generic;
+using UnityEngine.Serialization;
 
 [CreateAssetMenu(fileName = "LevelData", menuName = "Scriptable Objects/LevelData")]
 public class LevelData : ScriptableObject
 {
     [System.Serializable]
-    public class Kalimat
+    public class Sentence
     {
-        [Tooltip("Teks lengkap kalimat")]
-        public string teksLengkap;
+        [Tooltip("Full text of the sentence")]
+        [FormerlySerializedAs("teksLengkap")]
+        public string fullText;
         
-        [Tooltip("Potongan kata sesuai urutan yang benar untuk dibawa musuh")]
-        public List<string> potonganKataBenar;
+        [Tooltip("Word fragments in the correct order to be carried by enemies")]
+        [FormerlySerializedAs("potonganKataBenar")]
+        public List<string> correctWordFragments;
     }
 
-    [Header("Daftar Kalimat di Level Ini")]
-    public List<Kalimat> daftarKalimat;
-
+    [Header("List of Sentences in this Level")]
+    [FormerlySerializedAs("daftarKalimat")]
+    public List<Sentence> sentences;
 }
+

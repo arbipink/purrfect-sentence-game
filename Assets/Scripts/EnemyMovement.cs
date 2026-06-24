@@ -1,5 +1,6 @@
 using UnityEngine;
 using TMPro;
+using UnityEngine.Serialization;
 
 public class EnemyMovement : MonoBehaviour
 {
@@ -7,7 +8,8 @@ public class EnemyMovement : MonoBehaviour
     [HideInInspector]
     public bool isFrozen = false;
 
-    public string kataYangDibawa; 
+    [FormerlySerializedAs("kataYangDibawa")]
+    public string wordCarried; 
     public TextMeshProUGUI textMeshComponent; 
     
     private Transform playerTarget;
@@ -19,7 +21,7 @@ public class EnemyMovement : MonoBehaviour
 
         if (textMeshComponent != null)
         {
-            textMeshComponent.text = kataYangDibawa;
+            textMeshComponent.text = wordCarried;
         }
     }
 
@@ -27,24 +29,24 @@ public class EnemyMovement : MonoBehaviour
     {
         if (isFrozen || playerTarget == null) return;
 
-        // Musuh selalu bergerak mengejar posisi Kucing saat ini
+        // Enemy always moves to chase the player's current position
         transform.position = Vector3.MoveTowards(transform.position, playerTarget.position, speed * Time.deltaTime);
 
-        // Selalu menghadap ke arah Kucing
+        // Always face towards the player
         transform.LookAt(new Vector3(playerTarget.position.x, transform.position.y, playerTarget.position.z));
 
         if (textMeshComponent != null)
 {
-            // Ambil transform milik canvas (induk dari objek teks)
+            // Get the canvas transform (parent of the text object)
             Transform canvasTransform = textMeshComponent.canvas.transform;
 
-            string namaSceneAktif = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name;
+            string activeSceneName = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name;
             
-            if (namaSceneAktif == "Scene_Medium")
+            if (activeSceneName == "Scene_Medium")
             {
                 canvasTransform.rotation = Quaternion.Euler(0f, 0f, 0f); 
             }
-            else if (namaSceneAktif == "Scene_Easy")
+            else if (activeSceneName == "Scene_Easy")
             {
                 canvasTransform.rotation = Quaternion.Euler(0f, 90f, 0f); 
             }
@@ -55,8 +57,11 @@ public class EnemyMovement : MonoBehaviour
         }
         if (Vector3.Distance(transform.position, playerTarget.position) < 1.0f)
         {
-
-            Debug.Log("Kucing Ditabrak Jamur! Darah Berkurang!"); // Ganti dengan logika pengurangan HP atau efek lain sesuai kebutuhan
+            PlayerHealth playerHealth = playerTarget.GetComponent<PlayerHealth>();
+            if (playerHealth != null)
+            {
+                playerHealth.TakeDamage(1);
+            }
         }
     }
 }

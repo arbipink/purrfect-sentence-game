@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using UnityEngine.Serialization;
 
 public class EnemySpawner : MonoBehaviour
 {
@@ -15,15 +16,24 @@ public class EnemySpawner : MonoBehaviour
     public float maxSpawnDistance = 25f;
 
     [Header("Enemy Movement")]
-    // public float enemySpeed = 2f;
     public Transform playerTransform;
-    public LevelData dataLevelIni; 
-    private int indexKalimatAktif = 0; 
+    
+    [FormerlySerializedAs("dataLevelIni")]
+    public LevelData levelData; 
+    private int activeSentenceIndex = 0; 
 
     private List<GameObject> activeEnemies = new List<GameObject>();
 
     void Start()
     {
+        if (playerTransform != null)
+        {
+            PlayerHealth health = playerTransform.GetComponent<PlayerHealth>();
+            if (health == null)
+            {
+                health = playerTransform.gameObject.AddComponent<PlayerHealth>();
+            }
+        }
         StartCoroutine(SpawnEnemyRoutine());
     }
 
@@ -43,58 +53,56 @@ public class EnemySpawner : MonoBehaviour
 
     void SpawnEnemy()
     {
-        if (playerTransform == null || dataLevelIni == null) return;
-        if (indexKalimatAktif >= dataLevelIni.daftarKalimat.Count) return;
+        if (playerTransform == null || levelData == null) return;
+        if (activeSentenceIndex >= levelData.sentences.Count) return;
 
-        // Mengambil semua potongan kata benar untuk kalimat saat ini
-        List<string> semuaKataBenar = dataLevelIni.daftarKalimat[indexKalimatAktif].potonganKataBenar;
-        if (semuaKataBenar == null || semuaKataBenar.Count == 0) return;
+        // Retrieve all correct word fragments for the current sentence
+        List<string> allCorrectWords = levelData.sentences[activeSentenceIndex].correctWordFragments;
+        if (allCorrectWords == null || allCorrectWords.Count == 0) return;
 
-        // Memuat daftar kata yang saat ini sudah ada di layar game
-        List<string> kataYangSudahAdaDiLayar = new List<string>();
+        // Load list of words currently present on screen
+        List<string> wordsAlreadyOnScreen = new List<string>();
         foreach (GameObject enemy in activeEnemies)
         {
             if (enemy != null)
             {
                 EnemyMovement em = enemy.GetComponent<EnemyMovement>();
-                if (em != null && !string.IsNullOrEmpty(em.kataYangDibawa))
+                if (em != null && !string.IsNullOrEmpty(em.wordCarried))
                 {
-                    kataYangSudahAdaDiLayar.Add(em.kataYangDibawa);
+                    wordsAlreadyOnScreen.Add(em.wordCarried);
                 }
             }
         }
 
-        // Mencari kata apa saja yang belum ada di layar (Kata Tersedia)
-        List<string> kataYangBelumSpawn = new List<string>();
-        foreach (string kata in semuaKataBenar)
+        // Find which words have not been spawned yet (Available Words)
+        List<string> wordsNotYetSpawned = new List<string>();
+        foreach (string word in allCorrectWords)
         {
-            if (!kataYangSudahAdaDiLayar.Contains(kata))
+            if (!wordsAlreadyOnScreen.Contains(word))
             {
-                kataYangBelumSpawn.Add(kata);
+                wordsNotYetSpawned.Add(word);
             }
         }
 
-        // Jika semua kata sudah spawn di layar, stop spawn biar tidak ada duplikasi
-        if (kataYangBelumSpawn.Count == 0)
+        // If all words are already spawned on screen, stop spawning to avoid duplicates
+        if (wordsNotYetSpawned.Count == 0)
         {
-            // Debug.Log("Semua kata dari kalimat ini sudah ada di layar. Menunggu player menarik garis...");
             return; 
         }
 
-        // Pilih satu kata secara acak dari daftar kata yang BELUM SPAWN tadi
-        string kataUntukJamur = kataYangBelumSpawn[Random.Range(0, kataYangBelumSpawn.Count)];
+        // Pick a random word from the list of words that have not yet spawned
+        string wordForMushroom = wordsNotYetSpawned[Random.Range(0, wordsNotYetSpawned.Count)];
 
-
-        // ## Logika kalkulasi posisi spawn di samping/belakang
+        // ## Logic to calculate spawn position on sides or behind the player
         float randomDistance = Random.Range(minSpawnDistance, maxSpawnDistance);
         Vector3 spawnDirection = Vector3.zero;
         float randomChance = Random.Range(0f, 100f);
 
         if (randomChance < 50f)
         {
-            Vector3 keBelakang = -playerTransform.forward;
-            Vector3 variasiSamping = playerTransform.right * Random.Range(-0.5f, 0.5f);
-            spawnDirection = (keBelakang + variasiSamping).normalized;
+            Vector3 backwardDirection = -playerTransform.forward;
+            Vector3 sideOffset = playerTransform.right * Random.Range(-0.5f, 0.5f);
+            spawnDirection = (backwardDirection + sideOffset).normalized;
         }
         else if (randomChance < 70f)
         {
@@ -109,37 +117,54 @@ public class EnemySpawner : MonoBehaviour
         Vector3 spawnPosition = playerTransform.position + spawnOffset;
         spawnPosition.y = playerTransform.position.y;
 
-        // Spawn Musuh
+        // Spawn Enemy
         GameObject spawnedEnemy = Instantiate(enemyPrefab, spawnPosition, Quaternion.identity);
         activeEnemies.Add(spawnedEnemy);
         
         EnemyMovement movement = spawnedEnemy.GetComponent<EnemyMovement>();
         if (movement != null)
         {
-            // movement.speed = enemySpeed;
-            movement.kataYangDibawa = kataUntukJamur;
+            movement.wordCarried = wordForMushroom;
             movement.SetTarget(playerTransform);
         }
     }
 
-    public int GetCurrentKalimatIndex()
+    public int GetCurrentSentenceIndex()
     {
-        return indexKalimatAktif;
+        return activeSentenceIndex;
     }
 
-    public void LanjutKalimatBerikutnya()
+    public void HandlePlayerHit()
     {
-        indexKalimatAktif++;
-        
-        if (indexKalimatAktif >= dataLevelIni.daftarKalimat.Count)
+        // Disable enemy movement scripts to prevent duplicate triggers in the same frame
+        foreach (var enemy in activeEnemies)
         {
-            Debug.Log("SEMUA KALIMAT SELESAI! LEVEL CLEAR!");
+            if (enemy != null)
+            {
+                EnemyMovement em = enemy.GetComponent<EnemyMovement>();
+                if (em != null) em.enabled = false;
+                Destroy(enemy);
+            }
+        }
+        activeEnemies.Clear();
+
+        // Proceed to next sentence
+        ProceedToNextSentence();
+    }
+
+    public void ProceedToNextSentence()
+    {
+        activeSentenceIndex++;
+        
+        if (activeSentenceIndex >= levelData.sentences.Count)
+        {
+            Debug.Log("ALL SENTENCES COMPLETED! LEVEL CLEAR!");
 
             Invoke("OnLevelClear", 2f);
         }
         else
         {
-            Debug.Log("Kalimat sukses! Bersihkan sisa musuh dan lanjut ke kalimat berikutnya...");
+            Debug.Log("Sentence successful! Clear remaining enemies and proceed to the next sentence...");
             foreach (var enemy in activeEnemies) 
             { 
                 if (enemy != null) Destroy(enemy); 
@@ -150,7 +175,6 @@ public class EnemySpawner : MonoBehaviour
 
     void OnLevelClear()
     {
-        // SceneManager.LoadScene("Scene_Medium");
         SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex + 1);
     }
 }

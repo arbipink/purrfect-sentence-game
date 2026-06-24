@@ -15,7 +15,7 @@ public class DotConnectManager : MonoBehaviour
     public float lineWidth = 0.1f;
     public Color lineColor = Color.yellow;
 
-    [Tooltip("Sedikit angkat garis di atas tanah agar tidak z-fighting / kedip-kedip")]
+    [Tooltip("Slightly lift the line above the ground to avoid z-fighting / flickering")]
     public float lineHoverOffset = 0.05f;
 
     [Header("Layer Settings")]
@@ -29,7 +29,7 @@ public class DotConnectManager : MonoBehaviour
         Cursor.lockState = CursorLockMode.None;
         Cursor.visible = true;
 
-        spawner = FindFirstObjectByType<EnemySpawner>();
+        spawner = FindAnyObjectByType<EnemySpawner>();
     }
 
     void Update()
@@ -66,40 +66,40 @@ public class DotConnectManager : MonoBehaviour
         }
     }
 
-    GameObject CariEnemyDiPosisiMouse(Vector2 mousePos)
+    GameObject FindEnemyAtMousePosition(Vector2 mousePos)
     {
-        EnemyMovement[] semuaMusuh = FindObjectsByType<EnemyMovement>(FindObjectsSortMode.None);
-        GameObject musuhTerpilih = null;
-        float jarakTerdekat = clickRadiusPixels;
+        EnemyMovement[] allEnemies = FindObjectsByType<EnemyMovement>(FindObjectsInactive.Exclude);
+        GameObject selectedEnemy = null;
+        float closestDistance = clickRadiusPixels;
 
-        foreach (EnemyMovement musuh in semuaMusuh)
+        foreach (EnemyMovement enemy in allEnemies)
         {
-            if (musuh == null) continue;
+            if (enemy == null) continue;
 
-            // Konversi posisi 3D musuh menjadi koordinat 2D di layar monitor
-            Vector2 musuhDiLayar = Camera.main.WorldToScreenPoint(musuh.transform.position);
-            float jarak = Vector2.Distance(mousePos, musuhDiLayar);
+            // Convert enemy's 3D position to 2D screen coordinates
+            Vector2 enemyOnScreen = Camera.main.WorldToScreenPoint(enemy.transform.position);
+            float distance = Vector2.Distance(mousePos, enemyOnScreen);
 
-            if (jarak < jarakTerdekat)
+            if (distance < closestDistance)
             {
-                jarakTerdekat = jarak;
-                musuhTerpilih = musuh.gameObject;
+                closestDistance = distance;
+                selectedEnemy = enemy.gameObject;
             }
         }
-        return musuhTerpilih;
+        return selectedEnemy;
     }
 
     void HandleMouseClick()
     {
         Vector2 mousePosition = Pointer.current.position.ReadValue();
-        GameObject enemyDidekatMouse = CariEnemyDiPosisiMouse(mousePosition);
+        GameObject enemyNearMouse = FindEnemyAtMousePosition(mousePosition);
         
-        // 1. Proyeksikan posisi mouse langsung ke ruang 3D sejajar jarak kedalaman kamera
-        // Kita hitung jarak antara kamera dan target jamur (menggunakan estimasi jarak konstan)
+        // 1. Project mouse position directly into 3D space relative to camera depth
+        // Estimate constant distance from camera to target
         
-        if (enemyDidekatMouse != null)
+        if (enemyNearMouse != null)
         {
-            lastSelectedDot = enemyDidekatMouse;
+            lastSelectedDot = enemyNearMouse;
             connectedDots.Clear();
             connectedDots.Add(lastSelectedDot);
 
@@ -115,11 +115,11 @@ public class DotConnectManager : MonoBehaviour
     void HandleMouseDrag()
     {
         Vector2 mousePosition = Pointer.current.position.ReadValue();
-        GameObject enemyDidekatMouse = CariEnemyDiPosisiMouse(mousePosition);
+        GameObject enemyNearMouse = FindEnemyAtMousePosition(mousePosition);
 
-        if (enemyDidekatMouse != null && !connectedDots.Contains(enemyDidekatMouse))
+        if (enemyNearMouse != null && !connectedDots.Contains(enemyNearMouse))
         {
-            GameObject currentDot = enemyDidekatMouse;
+            GameObject currentDot = enemyNearMouse;
 
             EnemyMovement movement = currentDot.GetComponent<EnemyMovement>();
             if (movement != null) movement.isFrozen = true;
@@ -137,7 +137,7 @@ public class DotConnectManager : MonoBehaviour
 
         if (currentLine == null) return;
 
-        // Visualisasi penarikan ujung tali dinamis mengikuti kursor di atas tanah
+        // Visualize dynamic line pointing to mouse cursor over the ground
         Ray ray = Camera.main.ScreenPointToRay(mousePosition);
         RaycastHit hit;
         Vector3 mouseWorldPos;
@@ -162,21 +162,20 @@ public class DotConnectManager : MonoBehaviour
         {
             if (connectedDots.Count > 1)
             {
-                // --- LOGIKA VALIDASI KALIMAT ---
-                if (CekApakahKalimatBenar())
+                // --- SENTENCE VALIDATION LOGIC ---
+                if (IsSentenceCorrect())
                 {
-                    
                     foreach (GameObject dot in connectedDots)
                     {
                         if (dot != null) Destroy(dot);
                     }
                     
-                    // Beritahu spawner untuk lanjut ke antrean kalimat berikutnya jika ada
-                    if (spawner != null) spawner.LanjutKalimatBerikutnya();
+                    // Notify spawner to proceed to the next sentence queue if available
+                    if (spawner != null) spawner.ProceedToNextSentence();
                 }
                 else
                 {
-                    // Jika salah susunan, lepas freeze, Mereka bakal menyerang lagi
+                    // If incorrect, unfreeze enemies so they resume attacking
                     foreach (GameObject dot in connectedDots)
                     {
                         if (dot != null)
@@ -185,7 +184,7 @@ public class DotConnectManager : MonoBehaviour
                             if (movement != null) movement.isFrozen = false;
                         }
                     }
-                    Debug.Log("Susunan Kalimat Salah! Coba Lagi!");
+                    Debug.Log("Incorrect sentence structure! Try again!");
                 }
             }
             else
@@ -207,28 +206,28 @@ public class DotConnectManager : MonoBehaviour
         }
     }
 
-    bool CekApakahKalimatBenar()
+    bool IsSentenceCorrect()
     {
-        if (spawner == null || spawner.dataLevelIni == null) return false;
+        if (spawner == null || spawner.levelData == null) return false;
         
-        // Ambil kunci jawaban kalimat aktif dari ScriptableObject via Spawner
-        int kalimatIndex = spawner.GetCurrentKalimatIndex(); // Kita butuh fungsi helper ini di Spawner nanti
-        List<string> kunciJawaban = spawner.dataLevelIni.daftarKalimat[kalimatIndex].potonganKataBenar;
+        // Get the active sentence answer key from ScriptableObject via Spawner
+        int sentenceIndex = spawner.GetCurrentSentenceIndex();
+        List<string> answerKey = spawner.levelData.sentences[sentenceIndex].correctWordFragments;
 
-        // Jika jumlah kata yang ditarik player tidak sama dengan jumlah kata kunci jawaban, otomatis salah!
-        if (connectedDots.Count != kunciJawaban.Count) return false;
+        // If word count doesn't match the answer key, it's incorrect
+        if (connectedDots.Count != answerKey.Count) return false;
 
-        // Cek urutan katanya satu per satu
+        // Check word sequence one by one
         for (int i = 0; i < connectedDots.Count; i++)
         {
             EnemyMovement moveComponent = connectedDots[i].GetComponent<EnemyMovement>();
-            if (moveComponent == null || moveComponent.kataYangDibawa != kunciJawaban[i])
+            if (moveComponent == null || moveComponent.wordCarried != answerKey[i])
             {
                 return false;
             }
         }
 
-        return true; // Urutan 100% Sesuai Kunci Jawaban!
+        return true; // Sequence perfectly matches the answer key
     }
 
     void CreateNewLine(Vector3 startPosition)

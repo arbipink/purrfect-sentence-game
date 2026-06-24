@@ -712,13 +712,13 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 586876443}
   serializedVersion: 2
-  m_LocalRotation: {x: -0.004890812, y: -0.7263965, z: 0.005137426, w: -0.6872393}
-  m_LocalPosition: {x: 44.276, y: 5.723, z: 63.894}
+  m_LocalRotation: {x: 0.27701166, y: 0.65967053, z: -0.28681937, w: 0.637051}
+  m_LocalPosition: {x: 40, y: 15, z: 63}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0.813, y: 93.173, z: 0.003}
+  m_LocalEulerAnglesHint: {x: 47, y: 92, z: 0.003}
 --- !u!1 &894822542
 GameObject:
   m_ObjectHideFlags: 0
@@ -2455,9 +2455,8 @@ MonoBehaviour:
   maxEnemies: 4
   minSpawnDistance: 25
   maxSpawnDistance: 35
-  enemySpeed: 2
   playerTransform: {fileID: 1658240174}
-  dataLevelIni: {fileID: 11400000, guid: df3eee7360e71b448bc83ec7bf6ef12b, type: 2}
+  levelData: {fileID: 11400000, guid: df3eee7360e71b448bc83ec7bf6ef12b, type: 2}
 --- !u!114 &2066651892
 MonoBehaviour:
   m_ObjectHideFlags: 0
