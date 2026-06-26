@@ -180,7 +180,15 @@ public class DotConnectManager : MonoBehaviour
                         if (dot != null)
                         {
                             SpawnSmokeVFX(dot.transform.position);
-                            Destroy(dot);
+                            EnemyMovement movement = dot.GetComponent<EnemyMovement>();
+                            if (movement != null)
+                            {
+                                movement.Die();
+                            }
+                            else
+                            {
+                                Destroy(dot);
+                            }
                         }
                     }
                     

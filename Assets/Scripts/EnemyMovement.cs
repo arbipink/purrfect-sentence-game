@@ -1,4 +1,5 @@
 using UnityEngine;
+using System.Collections.Generic;
 using TMPro;
 using UnityEngine.Serialization;
 
@@ -90,4 +91,59 @@ public class EnemyMovement : MonoBehaviour
             }
         }
     }
+
+    [Header("Death FX Settings")]
+    public GameObject deathFXPrefab;
+
+    public void Die()
+    {
+        PlayDeathFX();
+        Destroy(gameObject);
+    }
+
+    private void PlayDeathFX()
+    {
+        if (deathFXPrefab != null)
+        {
+            GameObject fxInstance = Instantiate(deathFXPrefab, transform.position, Quaternion.identity);
+            
+            // Clean up the instance after its duration to avoid memory leaks
+            ParticleSystem ps = fxInstance.GetComponentInChildren<ParticleSystem>();
+            if (ps != null)
+            {
+                var main = ps.main;
+                if (!main.loop)
+                {
+                    Destroy(fxInstance, main.duration + main.startLifetime.constantMax);
+                }
+                else
+                {
+                    Destroy(fxInstance, 3.0f);
+                }
+            }
+            else
+            {
+                Destroy(fxInstance, 3.0f);
+            }
+        }
+    }
+
+#if UNITY_EDITOR
+    private void OnValidate()
+    {
+        if (deathFXPrefab == null)
+        {
+            string[] guids = UnityEditor.AssetDatabase.FindAssets("CFXR _BOING_ t:Prefab", new[] { "Assets/Prefabs/FX" });
+            if (guids.Length > 0)
+            {
+                string path = UnityEditor.AssetDatabase.GUIDToAssetPath(guids[0]);
+                deathFXPrefab = UnityEditor.AssetDatabase.LoadAssetAtPath<GameObject>(path);
+                if (deathFXPrefab != null)
+                {
+                    UnityEditor.EditorUtility.SetDirty(this);
+                }
+            }
+        }
+    }
+#endif
 }
