@@ -228,4 +228,19 @@ public class AudioManager : MonoBehaviour
         sfxVolume = value;
         ApplyVolumes();
     }
+
+    public float GetMasterVolume()
+    {
+        return masterVolume;
+    }
+
+    public float GetBGMVolume()
+    {
+        return bgmVolume;
+    }
+
+    public float GetSFXVolume()
+    {
+        return sfxVolume;
+    }
 }

@@ -26,6 +26,9 @@ UI final dikerjakan oleh bagian UI/UX dan tidak diubah.
 
 - Button Play, Credit, Exit, Easy, Medium, Hard, Resume, Restart, Back to Menu: `buttonClickSFX`
 - Pause toggle: `buttonClickSFX` dan `pauseSFX`
+- Pause slider BGM: mengatur `AudioManager.SetBGMVolume`
+- Pause slider SFX: mengatur `AudioManager.SetSFXVolume`
+- Pause slider VFX jika tersedia: mengatur `SimpleVFXManager.SetVFXIntensity`
 - Player slash atau tap kata: `slashSFX`
 - Jawaban SPOK benar: `correctAnswerSFX`
 - Jawaban SPOK salah: `wrongAnswerSFX`

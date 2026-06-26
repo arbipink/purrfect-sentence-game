@@ -26,6 +26,7 @@ public class DotConnectManager : MonoBehaviour
 
     private Toggle pauseToggle;
     private bool suppressPauseToggleAudio;
+    private bool pauseSlidersReady;
 
     void Start()
     {
@@ -35,6 +36,7 @@ public class DotConnectManager : MonoBehaviour
         spawner = FindAnyObjectByType<EnemySpawner>();
 
         SetupPauseToggle();
+        SetupPauseSliders();
     }
 
     void Update()
@@ -309,6 +311,122 @@ public class DotConnectManager : MonoBehaviour
                 btn.onClick.AddListener(GoToMainMenu);
             }
         }
+    }
+
+    private void SetupPauseSliders()
+    {
+        if (pauseSlidersReady)
+        {
+            return;
+        }
+
+        Slider[] sliders = FindObjectsByType<Slider>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+        foreach (Slider slider in sliders)
+        {
+            if (slider == null)
+            {
+                continue;
+            }
+
+            string normalizedName = NormalizeUIName(slider.gameObject.name);
+
+            if (normalizedName.Contains("sfx"))
+            {
+                WireSlider(slider, GetSFXVolume, SetSFXVolume);
+            }
+            else if (normalizedName.Contains("bgm") || normalizedName.Contains("music"))
+            {
+                WireSlider(slider, GetBGMVolume, SetBGMVolume);
+            }
+            else if (normalizedName.Contains("vfx") || normalizedName.Contains("visualeffect"))
+            {
+                WireSlider(slider, GetVFXIntensity, SetVFXIntensity);
+            }
+        }
+
+        pauseSlidersReady = true;
+    }
+
+    private void WireSlider(Slider slider, System.Func<float> getter, UnityEngine.Events.UnityAction<float> setter)
+    {
+        if (slider == null || getter == null || setter == null)
+        {
+            return;
+        }
+
+        slider.onValueChanged.RemoveListener(setter);
+        slider.SetValueWithoutNotify(Mathf.Clamp(getter(), slider.minValue, slider.maxValue));
+        slider.onValueChanged.AddListener(setter);
+    }
+
+    private float GetBGMVolume()
+    {
+        AudioManager audioManager = AudioManager.Instance;
+        return audioManager != null ? audioManager.GetBGMVolume() : 1f;
+    }
+
+    private float GetSFXVolume()
+    {
+        AudioManager audioManager = AudioManager.Instance;
+        return audioManager != null ? audioManager.GetSFXVolume() : 1f;
+    }
+
+    private float GetVFXIntensity()
+    {
+        SimpleVFXManager vfxManager = SimpleVFXManager.Instance;
+        return vfxManager != null ? vfxManager.GetVFXIntensity() : 1f;
+    }
+
+    private void SetBGMVolume(float value)
+    {
+        AudioManager audioManager = AudioManager.Instance;
+        if (audioManager != null)
+        {
+            audioManager.SetBGMVolume(NormalizeSliderValue(value));
+        }
+    }
+
+    private void SetSFXVolume(float value)
+    {
+        AudioManager audioManager = AudioManager.Instance;
+        if (audioManager != null)
+        {
+            audioManager.SetSFXVolume(NormalizeSliderValue(value));
+        }
+    }
+
+    private void SetVFXIntensity(float value)
+    {
+        SimpleVFXManager vfxManager = SimpleVFXManager.Instance;
+        if (vfxManager != null)
+        {
+            vfxManager.SetVFXIntensity(NormalizeSliderValue(value));
+        }
+    }
+
+    private float NormalizeSliderValue(float value)
+    {
+        return Mathf.Clamp01(value);
+    }
+
+    private string NormalizeUIName(string value)
+    {
+        if (string.IsNullOrEmpty(value))
+        {
+            return string.Empty;
+        }
+
+        value = value.ToLowerInvariant();
+        System.Text.StringBuilder builder = new System.Text.StringBuilder(value.Length);
+        foreach (char character in value)
+        {
+            if (char.IsLetterOrDigit(character))
+            {
+                builder.Append(character);
+            }
+        }
+
+        return builder.ToString();
     }
 
     private void OnPauseToggleChanged(bool isPaused)

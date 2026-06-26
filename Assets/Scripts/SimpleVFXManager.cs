@@ -19,6 +19,10 @@ public class SimpleVFXManager : MonoBehaviour
     [SerializeField] private float slashTrailWidth = 0.08f;
     [SerializeField] private float slashTrailDuration = 0.18f;
 
+    [Header("VFX Settings")]
+    [Range(0f, 1f)]
+    [SerializeField] private float vfxIntensity = 1f;
+
     private void Awake()
     {
         if (Instance != null && Instance != this)
@@ -46,6 +50,11 @@ public class SimpleVFXManager : MonoBehaviour
 
     public void PlaySlash(Vector3 startPosition, Vector3 endPosition)
     {
+        if (vfxIntensity <= 0f)
+        {
+            return;
+        }
+
         Vector3 direction = endPosition - startPosition;
         Vector3 effectPosition = startPosition + direction * 0.5f;
         Quaternion effectRotation = direction.sqrMagnitude > 0.0001f
@@ -63,6 +72,11 @@ public class SimpleVFXManager : MonoBehaviour
 
     public void PlayCorrectAnswer(Vector3 position)
     {
+        if (vfxIntensity <= 0f)
+        {
+            return;
+        }
+
         if (correctAnswerEffectPrefab != null)
         {
             SpawnEffect(correctAnswerEffectPrefab, position, Quaternion.identity, 2f);
@@ -74,6 +88,11 @@ public class SimpleVFXManager : MonoBehaviour
 
     public void PlayEnemyDefeated(Vector3 position)
     {
+        if (vfxIntensity <= 0f)
+        {
+            return;
+        }
+
         if (enemyDefeatedEffectPrefab != null)
         {
             SpawnEffect(enemyDefeatedEffectPrefab, position, Quaternion.identity, 2f);
@@ -85,6 +104,11 @@ public class SimpleVFXManager : MonoBehaviour
 
     public void PlayDamage(Vector3 position, GameObject target = null)
     {
+        if (vfxIntensity <= 0f)
+        {
+            return;
+        }
+
         if (damageEffectPrefab != null)
         {
             SpawnEffect(damageEffectPrefab, position, Quaternion.identity, 1.5f);
@@ -95,6 +119,11 @@ public class SimpleVFXManager : MonoBehaviour
 
     public void PlayWrongAnswer(Transform target = null)
     {
+        if (vfxIntensity <= 0f)
+        {
+            return;
+        }
+
         Vector3 position = target != null ? target.position : Vector3.zero;
 
         if (wrongAnswerEffectPrefab != null)
@@ -105,12 +134,17 @@ public class SimpleVFXManager : MonoBehaviour
         Transform shakeTarget = target != null ? target : Camera.main != null ? Camera.main.transform : null;
         if (shakeTarget != null)
         {
-            StartCoroutine(ShakeTransform(shakeTarget, 0.16f, 0.08f));
+            StartCoroutine(ShakeTransform(shakeTarget, 0.16f, 0.08f * vfxIntensity));
         }
     }
 
     public void PlayLevelComplete(Vector3 position)
     {
+        if (vfxIntensity <= 0f)
+        {
+            return;
+        }
+
         if (levelCompleteEffectPrefab != null)
         {
             SpawnEffect(levelCompleteEffectPrefab, position, Quaternion.identity, 2.5f);
@@ -128,7 +162,32 @@ public class SimpleVFXManager : MonoBehaviour
         }
 
         GameObject instance = Instantiate(prefab, position, rotation);
+        ApplyIntensity(instance);
         Destroy(instance, GetEffectLifetime(instance, fallbackLifetime));
+    }
+
+    private void ApplyIntensity(GameObject instance)
+    {
+        if (instance == null)
+        {
+            return;
+        }
+
+        float scale = Mathf.Lerp(0.35f, 1f, vfxIntensity);
+        instance.transform.localScale *= scale;
+
+        ParticleSystem[] particleSystems = instance.GetComponentsInChildren<ParticleSystem>();
+        foreach (ParticleSystem particleSystem in particleSystems)
+        {
+            if (particleSystem == null)
+            {
+                continue;
+            }
+
+            ParticleSystem.MainModule main = particleSystem.main;
+            main.startSizeMultiplier *= scale;
+            main.startSpeedMultiplier *= scale;
+        }
     }
 
     private float GetEffectLifetime(GameObject instance, float fallbackLifetime)
@@ -172,9 +231,9 @@ public class SimpleVFXManager : MonoBehaviour
 
         lineRenderer.positionCount = 2;
         lineRenderer.useWorldSpace = true;
-        lineRenderer.startWidth = slashTrailWidth;
+        lineRenderer.startWidth = slashTrailWidth * vfxIntensity;
         lineRenderer.endWidth = 0f;
-        lineRenderer.startColor = slashTrailColor;
+        lineRenderer.startColor = new Color(slashTrailColor.r, slashTrailColor.g, slashTrailColor.b, slashTrailColor.a * vfxIntensity);
         lineRenderer.endColor = new Color(slashTrailColor.r, slashTrailColor.g, slashTrailColor.b, 0f);
         lineRenderer.SetPosition(0, startPosition);
         lineRenderer.SetPosition(1, endPosition);
@@ -196,9 +255,9 @@ public class SimpleVFXManager : MonoBehaviour
         ParticleSystem particleSystem = particlesObject.AddComponent<ParticleSystem>();
         ParticleSystem.MainModule main = particleSystem.main;
         main.startLifetime = lifetime;
-        main.startSpeed = 2.5f;
-        main.startSize = 0.18f;
-        main.startColor = color;
+        main.startSpeed = 2.5f * vfxIntensity;
+        main.startSize = 0.18f * vfxIntensity;
+        main.startColor = new Color(color.r, color.g, color.b, color.a * vfxIntensity);
         main.loop = false;
         main.playOnAwake = false;
 
@@ -209,7 +268,7 @@ public class SimpleVFXManager : MonoBehaviour
         shape.shapeType = ParticleSystemShapeType.Sphere;
         shape.radius = 0.4f;
 
-        particleSystem.Emit(count);
+        particleSystem.Emit(Mathf.Max(1, Mathf.RoundToInt(count * vfxIntensity)));
         Destroy(particlesObject, lifetime + 0.5f);
     }
 
@@ -228,7 +287,8 @@ public class SimpleVFXManager : MonoBehaviour
         imageObject.transform.SetParent(canvasObject.transform, false);
 
         Image image = imageObject.AddComponent<Image>();
-        image.color = new Color(1f, 0f, 0f, 0.28f);
+        float startAlpha = 0.28f * vfxIntensity;
+        image.color = new Color(1f, 0f, 0f, startAlpha);
         image.raycastTarget = false;
 
         RectTransform rectTransform = image.rectTransform;
@@ -243,7 +303,7 @@ public class SimpleVFXManager : MonoBehaviour
         while (elapsed < duration && image != null)
         {
             elapsed += Time.unscaledDeltaTime;
-            float alpha = Mathf.Lerp(0.28f, 0f, elapsed / duration);
+            float alpha = Mathf.Lerp(startAlpha, 0f, elapsed / duration);
             image.color = new Color(1f, 0f, 0f, alpha);
             yield return null;
         }
@@ -269,5 +329,15 @@ public class SimpleVFXManager : MonoBehaviour
         {
             target.localPosition = originalLocalPosition;
         }
+    }
+
+    public void SetVFXIntensity(float value)
+    {
+        vfxIntensity = Mathf.Clamp01(value);
+    }
+
+    public float GetVFXIntensity()
+    {
+        return vfxIntensity;
     }
 }
