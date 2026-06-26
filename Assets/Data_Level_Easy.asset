@@ -33,3 +33,53 @@ MonoBehaviour:
     - Andi
     - Bermain
     - Kelereng
+  - fullText: Ibu Memasak Sayur
+    correctWordFragments:
+    - Ibu
+    - Memasak
+    - Sayur
+  - fullText: Kakak Membeli Sepatu
+    correctWordFragments:
+    - Kakak
+    - Membeli
+    - Sepatu
+  - fullText: Kucing Menangkap Tikus
+    correctWordFragments:
+    - Kucing
+    - Menangkap
+    - Tikus
+  - fullText: Adik Minum Susu
+    correctWordFragments:
+    - Adik
+    - Minum
+    - Susu
+  - fullText: Paman Menanam Padi
+    correctWordFragments:
+    - Paman
+    - Menanam
+    - Padi
+  - fullText: Tono Menulis Surat
+    correctWordFragments:
+    - Tono
+    - Menulis
+    - Surat
+  - fullText: Rina Menyapu Lantai
+    correctWordFragments:
+    - Rina
+    - Menyapu
+    - Lantai
+  - fullText: Kakek Membaca Koran
+    correctWordFragments:
+    - Kakek
+    - Membaca
+    - Koran
+  - fullText: Burung Memakan Cacing
+    correctWordFragments:
+    - Burung
+    - Memakan
+    - Cacing
+  - fullText: Guru Mengajar Murid
+    correctWordFragments:
+    - Guru
+    - Mengajar
+    - Murid

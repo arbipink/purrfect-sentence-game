@@ -27,3 +27,73 @@ MonoBehaviour:
     - buku
     - di ruang tamu
     - kemarin
+  - fullText: Ayah mengendarai mobil baru ke kantor tadi pagi
+    correctWordFragments:
+    - Ayah
+    - mengendarai
+    - mobil baru
+    - ke kantor
+    - tadi pagi
+  - fullText: Ibu membeli sayuran segar di pasar tradisional kemarin
+    correctWordFragments:
+    - Ibu
+    - membeli
+    - sayuran segar
+    - di pasar tradisional
+    - kemarin
+  - fullText: Adik menangis sangat keras di dalam kamar tadi malam
+    correctWordFragments:
+    - Adik
+    - menangis
+    - sangat keras
+    - di dalam kamar
+    - tadi malam
+  - fullText: Kami menonton film seru di bioskop bersama teman
+    correctWordFragments:
+    - Kami
+    - menonton
+    - film seru
+    - di bioskop
+    - bersama teman
+  - fullText: Guru menjelaskan materi sulit di papan tulis dengan jelas
+    correctWordFragments:
+    - Guru
+    - menjelaskan
+    - materi sulit
+    - di papan tulis
+    - dengan jelas
+  - fullText: Mereka makan malam bersama di restoran mewah hari ini
+    correctWordFragments:
+    - Mereka
+    - makan malam
+    - bersama
+    - di restoran mewah
+    - hari ini
+  - fullText: Dokter memeriksa pasien sakit di rumah sakit dengan teliti
+    correctWordFragments:
+    - Dokter
+    - memeriksa
+    - pasien sakit
+    - di rumah sakit
+    - dengan teliti
+  - fullText: Petani menanam padi hijau di sawah luas musim ini
+    correctWordFragments:
+    - Petani
+    - menanam
+    - padi hijau
+    - di sawah luas
+    - musim ini
+  - fullText: Polisi menangkap pencuri motor di jalan raya sore kemarin
+    correctWordFragments:
+    - Polisi
+    - menangkap
+    - pencuri motor
+    - di jalan raya
+    - sore kemarin
+  - fullText: Rina menyelesaikan tugas sekolah di perpustakaan sampai sore
+    correctWordFragments:
+    - Rina
+    - menyelesaikan
+    - tugas sekolah
+    - di perpustakaan
+    - sampai sore

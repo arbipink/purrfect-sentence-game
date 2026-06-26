@@ -25,3 +25,63 @@ MonoBehaviour:
     - memasak
     - rendang
     - di dapur
+  - fullText: Ayah membaca koran di teras
+    correctWordFragments:
+    - Ayah
+    - membaca
+    - koran
+    - di teras
+  - fullText: Adik bermain boneka di kamar
+    correctWordFragments:
+    - Adik
+    - bermain
+    - boneka
+    - di kamar
+  - fullText: Kakak mencuci motor di halaman
+    correctWordFragments:
+    - Kakak
+    - mencuci
+    - motor
+    - di halaman
+  - fullText: Paman memotong rumput di kebun
+    correctWordFragments:
+    - Paman
+    - memotong
+    - rumput
+    - di kebun
+  - fullText: Kami makan sate di warung
+    correctWordFragments:
+    - Kami
+    - makan
+    - sate
+    - di warung
+  - fullText: Mereka bermain bola di lapangan
+    correctWordFragments:
+    - Mereka
+    - bermain
+    - bola
+    - di lapangan
+  - fullText: Kucing tidur pulas di sofa
+    correctWordFragments:
+    - Kucing
+    - tidur
+    - pulas
+    - di sofa
+  - fullText: Tono membeli buku di toko
+    correctWordFragments:
+    - Tono
+    - membeli
+    - buku
+    - di toko
+  - fullText: Rina belajar matematika di kelas
+    correctWordFragments:
+    - Rina
+    - belajar
+    - matematika
+    - di kelas
+  - fullText: Bibi menyiram bunga di taman
+    correctWordFragments:
+    - Bibi
+    - menyiram
+    - bunga
+    - di taman
