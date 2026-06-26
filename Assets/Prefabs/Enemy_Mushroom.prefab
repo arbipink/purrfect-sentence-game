@@ -371,9 +371,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b512b1459f18f20439449d34242b5c19, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EnemyMovement
-  speed: 2
+  speed: 3
   isFrozen: 0
-  kataYangDibawa: 
+  wordCarried: 
   textMeshComponent: {fileID: 544332360463171031}
 --- !u!65 &-323208748027277820
 BoxCollider:

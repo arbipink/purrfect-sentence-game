@@ -60,6 +60,19 @@ public class EnemyMovement : MonoBehaviour
         // Always face towards the player
         transform.LookAt(new Vector3(playerTarget.position.x, transform.position.y, playerTarget.position.z));
 
+
+        if (Vector3.Distance(transform.position, playerTarget.position) < 1.0f)
+        {
+            PlayerHealth playerHealth = playerTarget.GetComponent<PlayerHealth>();
+            if (playerHealth != null)
+            {
+                playerHealth.TakeDamage(1);
+            }
+        }
+    }
+
+    void LateUpdate()
+    {
         if (textMeshComponent != null)
         {
             // Get the canvas transform (parent of the text object)
@@ -73,15 +86,6 @@ public class EnemyMovement : MonoBehaviour
             if (mainCamera != null)
             {
                 canvasTransform.rotation = mainCamera.transform.rotation;
-            }
-        }
-
-        if (Vector3.Distance(transform.position, playerTarget.position) < 1.0f)
-        {
-            PlayerHealth playerHealth = playerTarget.GetComponent<PlayerHealth>();
-            if (playerHealth != null)
-            {
-                playerHealth.TakeDamage(1);
             }
         }
     }

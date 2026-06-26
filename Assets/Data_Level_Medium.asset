@@ -12,10 +12,16 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 519b3dc2dbeb29f4caa7ea1f79a45785, type: 3}
   m_Name: Data_Level_Medium
   m_EditorClassIdentifier: Assembly-CSharp::LevelData
-  daftarKalimat:
-  - teksLengkap: Saya Makan Nasi Uduk
-    potonganKataBenar:
+  sentences:
+  - fullText: Saya minum air di gelas
+    correctWordFragments:
     - Saya
-    - Makan
-    - Nasi
-    - Uduk
+    - minum
+    - air
+    - di gelas
+  - fullText: Ibu memasak rendang di dapur
+    correctWordFragments:
+    - Ibu
+    - memasak
+    - rendang
+    - di dapur

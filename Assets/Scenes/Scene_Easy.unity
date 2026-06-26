@@ -378,7 +378,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -267, y: -144.83333}
+  m_AnchoredPosition: {x: -263.6, y: 156.2}
   m_SizeDelta: {x: 200, y: 50}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &281237025
@@ -2796,6 +2796,7 @@ MonoBehaviour:
   maxEnemies: 4
   minSpawnDistance: 25
   maxSpawnDistance: 35
+  minDistanceBetweenEnemies: 8
   playerTransform: {fileID: 1658240174}
   levelData: {fileID: 11400000, guid: df3eee7360e71b448bc83ec7bf6ef12b, type: 2}
 --- !u!114 &2066651892
@@ -2814,6 +2815,7 @@ MonoBehaviour:
   lineWidth: 0.1
   lineColor: {r: 1, g: 0.92156863, b: 0.015686275, a: 1}
   lineHoverOffset: 0.05
+  minDrawSegmentDistance: 0.2
   groundLayer:
     serializedVersion: 2
     m_Bits: 8

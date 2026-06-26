@@ -25,6 +25,11 @@ MonoBehaviour:
     - Mobil
   - fullText: Bimo Membaca Buku
     correctWordFragments:
-    - Ayah
-    - Mencuci
-    - Mobil
+    - Bimo
+    - Membaca
+    - Buku
+  - fullText: Andi Bermain Kelereng
+    correctWordFragments:
+    - Andi
+    - Bermain
+    - Kelereng
