@@ -1,6 +1,6 @@
 using UnityEngine;
 using UnityEngine.SceneManagement;
-using TMPro;
+using UnityEngine.UI;
 
 public class PlayerHealth : MonoBehaviour
 {
@@ -8,9 +8,8 @@ public class PlayerHealth : MonoBehaviour
     public int maxHealth = 3;
     private int currentHealth;
 
-    [Header("UI Settings")]
-    public TextMeshProUGUI healthText;
-    private Canvas healthCanvas;
+    [Header("Heart UI")]
+    public Image[] hearts;
 
     void Start()
     {
@@ -21,14 +20,14 @@ public class PlayerHealth : MonoBehaviour
     public void TakeDamage(int amount)
     {
         currentHealth -= amount;
-        if (currentHealth < 0) currentHealth = 0;
+
+        if (currentHealth < 0)
+            currentHealth = 0;
 
         UpdateHealthUI();
 
-        // Play damage feedback/shake or other reactions here if needed
-        Debug.Log($"Player took damage! Remaining Health: {currentHealth}");
+        Debug.Log("Player took damage! Remaining Health: " + currentHealth);
 
-        // Clear active enemies and proceed to the next grammar wave
         EnemySpawner spawner = FindAnyObjectByType<EnemySpawner>();
         if (spawner != null)
         {
@@ -43,16 +42,15 @@ public class PlayerHealth : MonoBehaviour
 
     void UpdateHealthUI()
     {
-        if (healthText != null)
+        for (int i = 0; i < hearts.Length; i++)
         {
-            healthText.text = $"HP: {currentHealth}";
+            hearts[i].enabled = i < currentHealth;
         }
     }
 
     void OnPlayerDeath()
     {
         Debug.Log("Player died! Restarting level...");
-        // Reload current scene
         SceneManager.LoadScene(SceneManager.GetActiveScene().name);
     }
 }
