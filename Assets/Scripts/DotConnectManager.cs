@@ -25,6 +25,7 @@ public class DotConnectManager : MonoBehaviour
     private EnemySpawner spawner;
 
     private Toggle pauseToggle;
+    private bool suppressPauseToggleAudio;
 
     void Start()
     {
@@ -117,6 +118,7 @@ public class DotConnectManager : MonoBehaviour
 
             lastSmokeSpawnPos = startPos;
             SpawnSmokeVFX(startPos);
+            PlaySlashFeedback(startPos);
         }
     }
 
@@ -128,6 +130,8 @@ public class DotConnectManager : MonoBehaviour
         if (enemyNearMouse != null && !connectedDots.Contains(enemyNearMouse))
         {
             GameObject currentDot = enemyNearMouse;
+            Vector3 previousDotPos = lastSelectedDot != null ? lastSelectedDot.transform.position : currentDot.transform.position;
+            previousDotPos.y += lineHoverOffset;
 
             EnemyMovement movement = currentDot.GetComponent<EnemyMovement>();
             if (movement != null) movement.isFrozen = true;
@@ -139,6 +143,7 @@ public class DotConnectManager : MonoBehaviour
             connectedDots.Add(currentDot);
 
             SpawnSmokeVFX(dotPos);
+            PlaySlashFeedback(previousDotPos, dotPos);
             lastSmokeSpawnPos = dotPos;
         }
 
@@ -175,6 +180,19 @@ public class DotConnectManager : MonoBehaviour
                 // --- SENTENCE VALIDATION LOGIC ---
                 if (IsSentenceCorrect())
                 {
+                    Vector3 feedbackPosition = GetConnectedDotsCenter();
+                    AudioManager audioManager = AudioManager.Instance;
+                    if (audioManager != null)
+                    {
+                        audioManager.PlayCorrectAnswer();
+                    }
+
+                    SimpleVFXManager vfxManager = SimpleVFXManager.Instance;
+                    if (vfxManager != null)
+                    {
+                        vfxManager.PlayCorrectAnswer(feedbackPosition);
+                    }
+
                     foreach (GameObject dot in connectedDots)
                     {
                         if (dot != null)
@@ -197,6 +215,18 @@ public class DotConnectManager : MonoBehaviour
                 }
                 else
                 {
+                    AudioManager audioManager = AudioManager.Instance;
+                    if (audioManager != null)
+                    {
+                        audioManager.PlayWrongAnswer();
+                    }
+
+                    SimpleVFXManager vfxManager = SimpleVFXManager.Instance;
+                    if (vfxManager != null)
+                    {
+                        vfxManager.PlayWrongAnswer(Camera.main != null ? Camera.main.transform : null);
+                    }
+
                     // If incorrect, unfreeze enemies so they resume attacking
                     foreach (GameObject dot in connectedDots)
                     {
@@ -283,14 +313,31 @@ public class DotConnectManager : MonoBehaviour
 
     private void OnPauseToggleChanged(bool isPaused)
     {
+        if (!suppressPauseToggleAudio)
+        {
+            AudioManager audioManager = AudioManager.Instance;
+            if (audioManager != null)
+            {
+                audioManager.PlayButtonClick();
+                if (isPaused)
+                {
+                    audioManager.PlayPause();
+                }
+            }
+        }
+
         Time.timeScale = isPaused ? 0f : 1f;
     }
 
     private void ResumeGame()
     {
+        PlayButtonClick();
+
         if (pauseToggle != null)
         {
+            suppressPauseToggleAudio = true;
             pauseToggle.isOn = false;
+            suppressPauseToggleAudio = false;
         }
         else
         {
@@ -300,12 +347,14 @@ public class DotConnectManager : MonoBehaviour
 
     private void RestartGame()
     {
+        PlayButtonClick();
         Time.timeScale = 1f;
         UnityEngine.SceneManagement.SceneManager.LoadScene(UnityEngine.SceneManagement.SceneManager.GetActiveScene().name);
     }
 
     private void GoToMainMenu()
     {
+        PlayButtonClick();
         Time.timeScale = 1f;
         UnityEngine.SceneManagement.SceneManager.LoadScene("MainMenu");
     }
@@ -339,6 +388,69 @@ public class DotConnectManager : MonoBehaviour
                 Destroy(smokeInstance, 2.0f);
             }
         }
+    }
+
+    private void PlaySlashFeedback(Vector3 position)
+    {
+        AudioManager audioManager = AudioManager.Instance;
+        if (audioManager != null)
+        {
+            audioManager.PlaySlash();
+        }
+
+        SimpleVFXManager vfxManager = SimpleVFXManager.Instance;
+        if (vfxManager != null)
+        {
+            vfxManager.PlaySlash(position);
+        }
+    }
+
+    private void PlaySlashFeedback(Vector3 startPosition, Vector3 endPosition)
+    {
+        AudioManager audioManager = AudioManager.Instance;
+        if (audioManager != null)
+        {
+            audioManager.PlaySlash();
+        }
+
+        SimpleVFXManager vfxManager = SimpleVFXManager.Instance;
+        if (vfxManager != null)
+        {
+            vfxManager.PlaySlash(startPosition, endPosition);
+        }
+    }
+
+    private void PlayButtonClick()
+    {
+        AudioManager audioManager = AudioManager.Instance;
+        if (audioManager != null)
+        {
+            audioManager.PlayButtonClick();
+        }
+    }
+
+    private Vector3 GetConnectedDotsCenter()
+    {
+        Vector3 totalPosition = Vector3.zero;
+        int validDotCount = 0;
+
+        foreach (GameObject dot in connectedDots)
+        {
+            if (dot == null)
+            {
+                continue;
+            }
+
+            totalPosition += dot.transform.position;
+            validDotCount++;
+        }
+
+        if (validDotCount == 0)
+        {
+            return Vector3.zero;
+        }
+
+        return totalPosition / validDotCount + Vector3.up * lineHoverOffset;
     }
 
 #if UNITY_EDITOR

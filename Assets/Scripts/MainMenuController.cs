@@ -93,12 +93,15 @@ public class MainMenuController : MonoBehaviour
 
     private void LoadLevel(string sceneName)
     {
+        PlayButtonClick();
         Debug.Log("Loading level: " + sceneName);
         SceneManager.LoadScene(sceneName);
     }
 
     public void ShowLevelSelection()
     {
+        PlayButtonClick();
+
         // Hide Main Menu buttons
         if (startButton != null) startButton.gameObject.SetActive(false);
         if (creditButton != null) creditButton.gameObject.SetActive(false);
@@ -113,6 +116,8 @@ public class MainMenuController : MonoBehaviour
 
     public void GoBackToMainMenu()
     {
+        PlayButtonClick();
+
         // Show Main Menu buttons
         if (startButton != null) startButton.gameObject.SetActive(true);
         if (creditButton != null) creditButton.gameObject.SetActive(true);
@@ -139,6 +144,7 @@ public class MainMenuController : MonoBehaviour
 
     public void ExitGame()
     {
+        PlayButtonClick();
         Debug.Log("Exiting Game...");
         Application.Quit();
 #if UNITY_EDITOR
@@ -148,6 +154,8 @@ public class MainMenuController : MonoBehaviour
 
     public void ShowCredits()
     {
+        PlayButtonClick();
+
         // Hide Main Menu buttons
         if (startButton != null) startButton.gameObject.SetActive(false);
         if (creditButton != null) creditButton.gameObject.SetActive(false);
@@ -157,5 +165,14 @@ public class MainMenuController : MonoBehaviour
         if (backButton != null) backButton.gameObject.SetActive(true);
 
         creditTextObj.SetActive(true);
+    }
+
+    private void PlayButtonClick()
+    {
+        AudioManager audioManager = AudioManager.Instance;
+        if (audioManager != null)
+        {
+            audioManager.PlayButtonClick();
+        }
     }
 }

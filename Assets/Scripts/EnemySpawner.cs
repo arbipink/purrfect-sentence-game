@@ -24,6 +24,7 @@ public class EnemySpawner : MonoBehaviour
     private int activeSentenceIndex = 0; 
 
     private List<GameObject> activeEnemies = new List<GameObject>();
+    private bool levelClearHandled;
 
     void Start()
     {
@@ -216,7 +217,14 @@ public class EnemySpawner : MonoBehaviour
         
         if (activeSentenceIndex >= levelData.sentences.Count)
         {
+            if (levelClearHandled)
+            {
+                return;
+            }
+
+            levelClearHandled = true;
             Debug.Log("ALL SENTENCES COMPLETED! LEVEL CLEAR!");
+            PlayLevelCompleteFeedback();
 
             Invoke("OnLevelClear", 2f);
         }
@@ -240,6 +248,22 @@ public class EnemySpawner : MonoBehaviour
         {
             SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex + 1);
             
+        }
+    }
+
+    private void PlayLevelCompleteFeedback()
+    {
+        AudioManager audioManager = AudioManager.Instance;
+        if (audioManager != null)
+        {
+            audioManager.PlayLevelComplete();
+        }
+
+        SimpleVFXManager vfxManager = SimpleVFXManager.Instance;
+        if (vfxManager != null)
+        {
+            Vector3 effectPosition = playerTransform != null ? playerTransform.position : Vector3.zero;
+            vfxManager.PlayLevelComplete(effectPosition + Vector3.up * 1.5f);
         }
     }
 }
