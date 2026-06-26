@@ -67,6 +67,6 @@
         "*.sln": "*.csproj",
         "*.slnx": "*.csproj"
     },
-    "dotnet.defaultSolution": "purrfect-game.slnx",
+    "dotnet.defaultSolution": "purrfect-sentence-game.slnx",
     "dotnet.enableWorkspaceBasedDevelopment": false
 }
