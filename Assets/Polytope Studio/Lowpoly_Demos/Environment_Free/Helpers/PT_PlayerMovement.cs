@@ -23,6 +23,8 @@ public class PT_PlayerMovement : MonoBehaviour
 
     void Update()
     {
+        if (Time.timeScale == 0f) return;
+
         isGrounded = Physics.CheckSphere(groundCheck.position, groundDistance, groundMask);
 
         if (isGrounded && velocity.y < 0)

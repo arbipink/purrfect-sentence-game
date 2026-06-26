@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine.UI;
 
 public class DotConnectManager : MonoBehaviour
 {
@@ -27,12 +28,16 @@ public class DotConnectManager : MonoBehaviour
     public float clickRadiusPixels = 70f;
     private EnemySpawner spawner;
 
+    private Toggle pauseToggle;
+
     void Start()
     {
         Cursor.lockState = CursorLockMode.None;
         Cursor.visible = true;
 
         spawner = FindAnyObjectByType<EnemySpawner>();
+
+        SetupPauseToggle();
     }
 
     void Update()
@@ -46,6 +51,8 @@ public class DotConnectManager : MonoBehaviour
         {
             Cursor.visible = true;
         }
+
+        if (Time.timeScale == 0f) return;
         
         var pointer = Pointer.current;
         if (pointer == null) return;
@@ -264,5 +271,65 @@ public class DotConnectManager : MonoBehaviour
 
         currentLine.positionCount = 1;
         currentLine.SetPosition(0, startPosition);
+    }
+
+    private void SetupPauseToggle()
+    {
+        pauseToggle = FindAnyObjectByType<Toggle>();
+        if (pauseToggle != null)
+        {
+            pauseToggle.isOn = false; // Start unpaused
+            pauseToggle.onValueChanged.AddListener(OnPauseToggleChanged);
+        }
+
+        // Auto-wire buttons by name
+        Button[] buttons = FindObjectsByType<Button>(FindObjectsInactive.Include);
+        foreach (Button btn in buttons)
+        {
+            if (btn.gameObject.name == "Resume")
+            {
+                btn.onClick.RemoveAllListeners();
+                btn.onClick.AddListener(ResumeGame);
+            }
+            else if (btn.gameObject.name == "Restart")
+            {
+                btn.onClick.RemoveAllListeners();
+                btn.onClick.AddListener(RestartGame);
+            }
+            else if (btn.gameObject.name == "BackToMenu")
+            {
+                btn.onClick.RemoveAllListeners();
+                btn.onClick.AddListener(GoToMainMenu);
+            }
+        }
+    }
+
+    private void OnPauseToggleChanged(bool isPaused)
+    {
+        Time.timeScale = isPaused ? 0f : 1f;
+    }
+
+    private void ResumeGame()
+    {
+        if (pauseToggle != null)
+        {
+            pauseToggle.isOn = false;
+        }
+        else
+        {
+            Time.timeScale = 1f;
+        }
+    }
+
+    private void RestartGame()
+    {
+        Time.timeScale = 1f;
+        UnityEngine.SceneManagement.SceneManager.LoadScene(UnityEngine.SceneManagement.SceneManager.GetActiveScene().name);
+    }
+
+    private void GoToMainMenu()
+    {
+        Time.timeScale = 1f;
+        UnityEngine.SceneManagement.SceneManager.LoadScene("MainMenu");
     }
 }

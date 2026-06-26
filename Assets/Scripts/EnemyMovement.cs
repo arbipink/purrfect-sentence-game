@@ -28,6 +28,7 @@ public class EnemyMovement : MonoBehaviour
 
     void Update()
     {
+        if (Time.timeScale == 0f) return;
         if (isFrozen || playerTarget == null) return;
 
         // Enemy always moves to chase the player's current position (calculated in X/Y/Z)
