@@ -12,9 +12,18 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 519b3dc2dbeb29f4caa7ea1f79a45785, type: 3}
   m_Name: Data_Level_Hard
   m_EditorClassIdentifier: Assembly-CSharp::LevelData
-  daftarKalimat:
-  - teksLengkap: Dia Minum Air
-    potonganKataBenar:
-    - Dia
-    - Minum
-    - Air
+  sentences:
+  - fullText: Kakak berenang di kolam di pagi hari
+    correctWordFragments:
+    - Kakak
+    - berenang
+    - di kolam
+    - di pagi
+    - hari
+  - fullText: Siti membaca buku di ruang tamu kemarin
+    correctWordFragments:
+    - Siti
+    - membaca
+    - buku
+    - di ruang tamu
+    - kemarin
