@@ -233,6 +233,13 @@ public class EnemySpawner : MonoBehaviour
 
     void OnLevelClear()
     {
-        SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex + 1);
+        if (SceneManager.GetActiveScene().name == "Scene_Hard")
+        {
+            Debug.Log("Congratulations! you have completed the hardest level!");
+        } else
+        {
+            SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex + 1);
+            
+        }
     }
 }
