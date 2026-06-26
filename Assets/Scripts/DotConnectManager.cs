@@ -5,22 +5,18 @@ using UnityEngine.UI;
 
 public class DotConnectManager : MonoBehaviour
 {
-    private LineRenderer currentLine;
-    private List<Vector3> linePoints = new List<Vector3>();
     private GameObject lastSelectedDot;
 
     private List<GameObject> connectedDots = new List<GameObject>();
 
-    [Header("Line Settings")]
-    public Material lineMaterial;
-    public float lineWidth = 0.1f;
-    public Color lineColor = Color.yellow;
-
-    [Tooltip("Slightly lift the line above the ground to avoid z-fighting / flickering")]
+    [Tooltip("Slightly lift the smoke effect above the ground to avoid clipping")]
     public float lineHoverOffset = 0.25f;
 
-    [Tooltip("Minimum distance in world space before adding a new segment to the freehand line")]
-    public float minDrawSegmentDistance = 0.2f;
+    [Header("VFX Settings")]
+    public GameObject[] smokePrefabs;
+    [Tooltip("Distance in world space between smoke spawns along the line")]
+    public float smokeSpawnIntervalDistance = 0.5f;
+    private Vector3 lastSmokeSpawnPos;
 
     [Header("Layer Settings")]
     public LayerMask groundLayer;
@@ -65,7 +61,7 @@ public class DotConnectManager : MonoBehaviour
             {
                 HandleMouseClick();
             }
-            else if (press.isPressed && currentLine != null)
+            else if (press.isPressed && lastSelectedDot != null)
             {
                 HandleMouseDrag();
             }
@@ -118,7 +114,9 @@ public class DotConnectManager : MonoBehaviour
 
             Vector3 startPos = lastSelectedDot.transform.position;
             startPos.y += lineHoverOffset;
-            CreateNewLine(startPos);
+
+            lastSmokeSpawnPos = startPos;
+            SpawnSmokeVFX(startPos);
         }
     }
 
@@ -137,13 +135,12 @@ public class DotConnectManager : MonoBehaviour
             Vector3 dotPos = currentDot.transform.position;
             dotPos.y += lineHoverOffset;
 
-            linePoints.Add(dotPos);
-
             lastSelectedDot = currentDot;
             connectedDots.Add(currentDot);
-        }
 
-        if (currentLine == null) return;
+            SpawnSmokeVFX(dotPos);
+            lastSmokeSpawnPos = dotPos;
+        }
 
         // Visualize dynamic line pointing to mouse cursor over the ground
         Ray ray = Camera.main.ScreenPointToRay(mousePosition);
@@ -160,28 +157,18 @@ public class DotConnectManager : MonoBehaviour
             mouseWorldPos = Camera.main.ScreenToWorldPoint(new Vector3(mousePosition.x, mousePosition.y, targetZDepth)) + (Vector3.up * lineHoverOffset);
         }
 
-        // Add intermediate points to linePoints if the mouse has moved far enough from the last point
-        if (linePoints.Count > 0)
+        // Check if we should spawn smoke along the line based on the separate interval distance
+        float distSinceLastSmoke = Vector3.Distance(mouseWorldPos, lastSmokeSpawnPos);
+        if (distSinceLastSmoke >= smokeSpawnIntervalDistance)
         {
-            float dist = Vector3.Distance(mouseWorldPos, linePoints[linePoints.Count - 1]);
-            if (dist > minDrawSegmentDistance)
-            {
-                linePoints.Add(mouseWorldPos);
-            }
+            SpawnSmokeVFX(mouseWorldPos);
+            lastSmokeSpawnPos = mouseWorldPos;
         }
-
-        // Render the permanent points plus the current mouse position as the last point
-        currentLine.positionCount = linePoints.Count + 1;
-        for (int i = 0; i < linePoints.Count; i++)
-        {
-            currentLine.SetPosition(i, linePoints[i]);
-        }
-        currentLine.SetPosition(linePoints.Count, mouseWorldPos);
     }
 
     void StopDrawing()
     {
-        if (currentLine != null)
+        if (lastSelectedDot != null)
         {
             if (connectedDots.Count > 1)
             {
@@ -190,7 +177,11 @@ public class DotConnectManager : MonoBehaviour
                 {
                     foreach (GameObject dot in connectedDots)
                     {
-                        if (dot != null) Destroy(dot);
+                        if (dot != null)
+                        {
+                            SpawnSmokeVFX(dot.transform.position);
+                            Destroy(dot);
+                        }
                     }
                     
                     // Notify spawner to proceed to the next sentence queue if available
@@ -222,8 +213,6 @@ public class DotConnectManager : MonoBehaviour
                 }
             }
 
-            Destroy(currentLine.gameObject);
-            currentLine = null;
             lastSelectedDot = null;
             connectedDots.Clear();
         }
@@ -251,26 +240,6 @@ public class DotConnectManager : MonoBehaviour
         }
 
         return true; // Sequence perfectly matches the answer key
-    }
-
-    void CreateNewLine(Vector3 startPosition)
-    {
-        linePoints.Clear();
-        linePoints.Add(startPosition);
-
-        GameObject lineObj = new GameObject("Line_" + System.DateTime.Now.Ticks);
-        lineObj.transform.position = startPosition;
-        currentLine = lineObj.AddComponent<LineRenderer>();
-
-        currentLine.material = lineMaterial != null ? lineMaterial : new Material(Shader.Find("Sprites/Default"));
-        currentLine.startWidth = lineWidth;
-        currentLine.endWidth = lineWidth;
-        currentLine.startColor = lineColor;
-        currentLine.endColor = lineColor;
-        currentLine.useWorldSpace = true;
-
-        currentLine.positionCount = 1;
-        currentLine.SetPosition(0, startPosition);
     }
 
     private void SetupPauseToggle()
@@ -332,4 +301,60 @@ public class DotConnectManager : MonoBehaviour
         Time.timeScale = 1f;
         UnityEngine.SceneManagement.SceneManager.LoadScene("MainMenu");
     }
+
+    private void SpawnSmokeVFX(Vector3 position)
+    {
+        if (smokePrefabs == null || smokePrefabs.Length == 0) return;
+
+        // Choose a random smoke prefab
+        GameObject prefab = smokePrefabs[Random.Range(0, smokePrefabs.Length)];
+        if (prefab != null)
+        {
+            GameObject smokeInstance = Instantiate(prefab, position, Quaternion.identity);
+            
+            // Clean up the instance after its duration to avoid memory leaks
+            ParticleSystem ps = smokeInstance.GetComponentInChildren<ParticleSystem>();
+            if (ps != null)
+            {
+                var main = ps.main;
+                if (!main.loop)
+                {
+                    Destroy(smokeInstance, main.duration + main.startLifetime.constantMax);
+                }
+                else
+                {
+                    Destroy(smokeInstance, 2.0f);
+                }
+            }
+            else
+            {
+                Destroy(smokeInstance, 2.0f);
+            }
+        }
+    }
+
+#if UNITY_EDITOR
+    private void OnValidate()
+    {
+        if (smokePrefabs == null || smokePrefabs.Length == 0)
+        {
+            List<GameObject> foundPrefabs = new List<GameObject>();
+            string[] guids = UnityEditor.AssetDatabase.FindAssets("t:Prefab", new[] { "Assets/Prefabs/Smokes" });
+            foreach (string guid in guids)
+            {
+                string path = UnityEditor.AssetDatabase.GUIDToAssetPath(guid);
+                GameObject prefab = UnityEditor.AssetDatabase.LoadAssetAtPath<GameObject>(path);
+                if (prefab != null)
+                {
+                    foundPrefabs.Add(prefab);
+                }
+            }
+            if (foundPrefabs.Count > 0)
+            {
+                smokePrefabs = foundPrefabs.ToArray();
+                UnityEditor.EditorUtility.SetDirty(this);
+            }
+        }
+    }
+#endif
 }
