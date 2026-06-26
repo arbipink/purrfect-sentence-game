@@ -97,6 +97,18 @@ public class EnemyMovement : MonoBehaviour
 
     public void Die()
     {
+        AudioManager audioManager = AudioManager.Instance;
+        if (audioManager != null)
+        {
+            audioManager.PlayEnemyDefeated();
+        }
+
+        SimpleVFXManager vfxManager = SimpleVFXManager.Instance;
+        if (vfxManager != null)
+        {
+            vfxManager.PlayEnemyDefeated(transform.position);
+        }
+
         PlayDeathFX();
         Destroy(gameObject);
     }

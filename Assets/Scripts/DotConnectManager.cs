@@ -25,6 +25,8 @@ public class DotConnectManager : MonoBehaviour
     private EnemySpawner spawner;
 
     private Toggle pauseToggle;
+    private bool suppressPauseToggleAudio;
+    private bool pauseSlidersReady;
 
     void Start()
     {
@@ -34,6 +36,7 @@ public class DotConnectManager : MonoBehaviour
         spawner = FindAnyObjectByType<EnemySpawner>();
 
         SetupPauseToggle();
+        SetupPauseSliders();
     }
 
     void Update()
@@ -117,6 +120,7 @@ public class DotConnectManager : MonoBehaviour
 
             lastSmokeSpawnPos = startPos;
             SpawnSmokeVFX(startPos);
+            PlaySlashFeedback(startPos);
         }
     }
 
@@ -128,6 +132,8 @@ public class DotConnectManager : MonoBehaviour
         if (enemyNearMouse != null && !connectedDots.Contains(enemyNearMouse))
         {
             GameObject currentDot = enemyNearMouse;
+            Vector3 previousDotPos = lastSelectedDot != null ? lastSelectedDot.transform.position : currentDot.transform.position;
+            previousDotPos.y += lineHoverOffset;
 
             EnemyMovement movement = currentDot.GetComponent<EnemyMovement>();
             if (movement != null) movement.isFrozen = true;
@@ -139,6 +145,7 @@ public class DotConnectManager : MonoBehaviour
             connectedDots.Add(currentDot);
 
             SpawnSmokeVFX(dotPos);
+            PlaySlashFeedback(previousDotPos, dotPos);
             lastSmokeSpawnPos = dotPos;
         }
 
@@ -175,6 +182,19 @@ public class DotConnectManager : MonoBehaviour
                 // --- SENTENCE VALIDATION LOGIC ---
                 if (IsSentenceCorrect())
                 {
+                    Vector3 feedbackPosition = GetConnectedDotsCenter();
+                    AudioManager audioManager = AudioManager.Instance;
+                    if (audioManager != null)
+                    {
+                        audioManager.PlayCorrectAnswer();
+                    }
+
+                    SimpleVFXManager vfxManager = SimpleVFXManager.Instance;
+                    if (vfxManager != null)
+                    {
+                        vfxManager.PlayCorrectAnswer(feedbackPosition);
+                    }
+
                     foreach (GameObject dot in connectedDots)
                     {
                         if (dot != null)
@@ -197,6 +217,18 @@ public class DotConnectManager : MonoBehaviour
                 }
                 else
                 {
+                    AudioManager audioManager = AudioManager.Instance;
+                    if (audioManager != null)
+                    {
+                        audioManager.PlayWrongAnswer();
+                    }
+
+                    SimpleVFXManager vfxManager = SimpleVFXManager.Instance;
+                    if (vfxManager != null)
+                    {
+                        vfxManager.PlayWrongAnswer(Camera.main != null ? Camera.main.transform : null);
+                    }
+
                     // If incorrect, unfreeze enemies so they resume attacking
                     foreach (GameObject dot in connectedDots)
                     {
@@ -281,16 +313,149 @@ public class DotConnectManager : MonoBehaviour
         }
     }
 
+    private void SetupPauseSliders()
+    {
+        if (pauseSlidersReady)
+        {
+            return;
+        }
+
+        Slider[] sliders = FindObjectsByType<Slider>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+        foreach (Slider slider in sliders)
+        {
+            if (slider == null)
+            {
+                continue;
+            }
+
+            string normalizedName = NormalizeUIName(slider.gameObject.name);
+
+            if (normalizedName.Contains("sfx"))
+            {
+                WireSlider(slider, GetSFXVolume, SetSFXVolume);
+            }
+            else if (normalizedName.Contains("bgm") || normalizedName.Contains("music"))
+            {
+                WireSlider(slider, GetBGMVolume, SetBGMVolume);
+            }
+            else if (normalizedName.Contains("vfx") || normalizedName.Contains("visualeffect"))
+            {
+                WireSlider(slider, GetVFXIntensity, SetVFXIntensity);
+            }
+        }
+
+        pauseSlidersReady = true;
+    }
+
+    private void WireSlider(Slider slider, System.Func<float> getter, UnityEngine.Events.UnityAction<float> setter)
+    {
+        if (slider == null || getter == null || setter == null)
+        {
+            return;
+        }
+
+        slider.onValueChanged.RemoveListener(setter);
+        slider.SetValueWithoutNotify(Mathf.Clamp(getter(), slider.minValue, slider.maxValue));
+        slider.onValueChanged.AddListener(setter);
+    }
+
+    private float GetBGMVolume()
+    {
+        AudioManager audioManager = AudioManager.Instance;
+        return audioManager != null ? audioManager.GetBGMVolume() : 1f;
+    }
+
+    private float GetSFXVolume()
+    {
+        AudioManager audioManager = AudioManager.Instance;
+        return audioManager != null ? audioManager.GetSFXVolume() : 1f;
+    }
+
+    private float GetVFXIntensity()
+    {
+        SimpleVFXManager vfxManager = SimpleVFXManager.Instance;
+        return vfxManager != null ? vfxManager.GetVFXIntensity() : 1f;
+    }
+
+    private void SetBGMVolume(float value)
+    {
+        AudioManager audioManager = AudioManager.Instance;
+        if (audioManager != null)
+        {
+            audioManager.SetBGMVolume(NormalizeSliderValue(value));
+        }
+    }
+
+    private void SetSFXVolume(float value)
+    {
+        AudioManager audioManager = AudioManager.Instance;
+        if (audioManager != null)
+        {
+            audioManager.SetSFXVolume(NormalizeSliderValue(value));
+        }
+    }
+
+    private void SetVFXIntensity(float value)
+    {
+        SimpleVFXManager vfxManager = SimpleVFXManager.Instance;
+        if (vfxManager != null)
+        {
+            vfxManager.SetVFXIntensity(NormalizeSliderValue(value));
+        }
+    }
+
+    private float NormalizeSliderValue(float value)
+    {
+        return Mathf.Clamp01(value);
+    }
+
+    private string NormalizeUIName(string value)
+    {
+        if (string.IsNullOrEmpty(value))
+        {
+            return string.Empty;
+        }
+
+        value = value.ToLowerInvariant();
+        System.Text.StringBuilder builder = new System.Text.StringBuilder(value.Length);
+        foreach (char character in value)
+        {
+            if (char.IsLetterOrDigit(character))
+            {
+                builder.Append(character);
+            }
+        }
+
+        return builder.ToString();
+    }
+
     private void OnPauseToggleChanged(bool isPaused)
     {
+        if (!suppressPauseToggleAudio)
+        {
+            AudioManager audioManager = AudioManager.Instance;
+            if (audioManager != null)
+            {
+                audioManager.PlayButtonClick();
+                if (isPaused)
+                {
+                    audioManager.PlayPause();
+                }
+            }
+        }
+
         Time.timeScale = isPaused ? 0f : 1f;
     }
 
     private void ResumeGame()
     {
+        PlayButtonClick();
+
         if (pauseToggle != null)
         {
+            suppressPauseToggleAudio = true;
             pauseToggle.isOn = false;
+            suppressPauseToggleAudio = false;
         }
         else
         {
@@ -300,12 +465,14 @@ public class DotConnectManager : MonoBehaviour
 
     private void RestartGame()
     {
+        PlayButtonClick();
         Time.timeScale = 1f;
         UnityEngine.SceneManagement.SceneManager.LoadScene(UnityEngine.SceneManagement.SceneManager.GetActiveScene().name);
     }
 
     private void GoToMainMenu()
     {
+        PlayButtonClick();
         Time.timeScale = 1f;
         UnityEngine.SceneManagement.SceneManager.LoadScene("MainMenu");
     }
@@ -339,6 +506,69 @@ public class DotConnectManager : MonoBehaviour
                 Destroy(smokeInstance, 2.0f);
             }
         }
+    }
+
+    private void PlaySlashFeedback(Vector3 position)
+    {
+        AudioManager audioManager = AudioManager.Instance;
+        if (audioManager != null)
+        {
+            audioManager.PlaySlash();
+        }
+
+        SimpleVFXManager vfxManager = SimpleVFXManager.Instance;
+        if (vfxManager != null)
+        {
+            vfxManager.PlaySlash(position);
+        }
+    }
+
+    private void PlaySlashFeedback(Vector3 startPosition, Vector3 endPosition)
+    {
+        AudioManager audioManager = AudioManager.Instance;
+        if (audioManager != null)
+        {
+            audioManager.PlaySlash();
+        }
+
+        SimpleVFXManager vfxManager = SimpleVFXManager.Instance;
+        if (vfxManager != null)
+        {
+            vfxManager.PlaySlash(startPosition, endPosition);
+        }
+    }
+
+    private void PlayButtonClick()
+    {
+        AudioManager audioManager = AudioManager.Instance;
+        if (audioManager != null)
+        {
+            audioManager.PlayButtonClick();
+        }
+    }
+
+    private Vector3 GetConnectedDotsCenter()
+    {
+        Vector3 totalPosition = Vector3.zero;
+        int validDotCount = 0;
+
+        foreach (GameObject dot in connectedDots)
+        {
+            if (dot == null)
+            {
+                continue;
+            }
+
+            totalPosition += dot.transform.position;
+            validDotCount++;
+        }
+
+        if (validDotCount == 0)
+        {
+            return Vector3.zero;
+        }
+
+        return totalPosition / validDotCount + Vector3.up * lineHoverOffset;
     }
 
 #if UNITY_EDITOR
