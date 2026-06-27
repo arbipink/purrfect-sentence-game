@@ -168,7 +168,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 0, y: -91}
+  m_AnchoredPosition: {x: 0, y: -128.5}
   m_SizeDelta: {x: 160, y: 47.1188}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &100707131
@@ -435,7 +435,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 0, y: -204}
+  m_AnchoredPosition: {x: 0, y: -297.9}
   m_SizeDelta: {x: 160, y: 51.5173}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &139181190
@@ -705,7 +705,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 0, y: -146}
+  m_AnchoredPosition: {x: 0, y: -207.5}
   m_SizeDelta: {x: 160, y: 47.1189}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &174047468
@@ -2062,7 +2062,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 0, y: -39}
+  m_AnchoredPosition: {x: 0, y: -54.3}
   m_SizeDelta: {x: 160, y: 41.27}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1470644673
@@ -2197,6 +2197,7 @@ MonoBehaviour:
   slashTrailColor: {r: 1, g: 0.92, b: 0.35, a: 1}
   slashTrailWidth: 0.08
   slashTrailDuration: 0.18
+  vfxIntensity: 1
 --- !u!4 &1768242947
 Transform:
   m_ObjectHideFlags: 0
