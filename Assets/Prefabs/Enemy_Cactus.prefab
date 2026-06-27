@@ -588,10 +588,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b512b1459f18f20439449d34242b5c19, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EnemyMovement
-  speed: 2
+  speed: 3
   isFrozen: 0
   wordCarried: 
   textMeshComponent: {fileID: 885912857321304982}
+  deathFXPrefab: {fileID: 8547867254204328264, guid: 44871bfdbec6a354188c5be08e9d085d, type: 3}
 --- !u!65 &5398153580095920868
 BoxCollider:
   m_ObjectHideFlags: 0
