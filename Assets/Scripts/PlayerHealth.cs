@@ -11,12 +11,19 @@ public class PlayerHealth : MonoBehaviour
     [Header("Heart UI")]
     public Image[] hearts;
 
+    [Header("UI Game Over Settings")]
     private bool gameOverHandled;
+    public GameObject gameOverPanel;
 
     void Start()
     {
         currentHealth = maxHealth;
         UpdateHealthUI();
+
+        if (gameOverPanel != null)
+        {
+            gameOverPanel.SetActive(false);
+        }
     }
 
     public void TakeDamage(int amount)
@@ -77,7 +84,26 @@ public class PlayerHealth : MonoBehaviour
             audioManager.PlayGameOver();
         }
 
-        Debug.Log("Player died! Restarting level...");
+        if (gameOverPanel != null)
+        {
+            gameOverPanel.SetActive(true);
+        }
+
+        // Debug.Log("Player died! Restarting level...");
+        // SceneManager.LoadScene(SceneManager.GetActiveScene().name);
+        Time.timeScale = 0f;
+    }
+
+    public void RestartLevelButton()
+    {
+        Time.timeScale = 1f;
         SceneManager.LoadScene(SceneManager.GetActiveScene().name);
+    }
+
+    public void BackToMenuButton()
+    {
+        Time.timeScale = 1f;
+        
+        SceneManager.LoadScene("MainMenu"); 
     }
 }

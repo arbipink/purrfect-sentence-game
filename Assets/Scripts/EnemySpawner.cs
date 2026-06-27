@@ -26,6 +26,9 @@ public class EnemySpawner : MonoBehaviour
     private List<GameObject> activeEnemies = new List<GameObject>();
     private bool levelClearHandled;
 
+    [Header("UI Successful Settings")]
+    public GameObject successPanel;
+
     void Start()
     {
         if (playerTransform != null)
@@ -246,9 +249,18 @@ public class EnemySpawner : MonoBehaviour
             Debug.Log("Congratulations! you have completed the hardest level!");
         } else
         {
-            SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex + 1);
+            if (successPanel != null)
+            {
+                successPanel.SetActive(true);
+            }
+            Invoke("ChangeNextScene", 2.5f);
             
         }
+    }
+
+    void ChangeNextScene()
+    {
+        SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex + 1);
     }
 
     private void PlayLevelCompleteFeedback()

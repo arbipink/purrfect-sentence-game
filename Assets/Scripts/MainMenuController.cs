@@ -18,31 +18,22 @@ public class MainMenuController : MonoBehaviour
     private Button hardButton;
     private Button backButton;
 
-    private GameObject creditTextObj;
-
     private void Start()
     {
         // Force cursor state for main menu
         Cursor.lockState = CursorLockMode.None;
         Cursor.visible = true;
 
-        // Find CreditText GameObject (including inactive ones)
-        Transform[] allTransforms = Resources.FindObjectsOfTypeAll<Transform>();
-        foreach (Transform t in allTransforms)
+        if (creditsPanel != null)
         {
-            if (t.gameObject.name == "CreditText")
-            {
-                creditTextObj = t.gameObject;
-                creditTextObj.SetActive(false); // Hide initially
-                break;
-            }
+            creditsPanel.SetActive(false); 
         }
 
         // Auto-wire buttons by name
         Button[] buttons = FindObjectsByType<Button>(FindObjectsInactive.Include);
         foreach (Button btn in buttons)
         {
-            if (btn.gameObject.name == "Start")
+            if (btn.gameObject.name == "Play Game")
             {
                 startButton = btn;
                 startButton.onClick.RemoveAllListeners();
@@ -65,28 +56,28 @@ public class MainMenuController : MonoBehaviour
                 easyButton = btn;
                 easyButton.onClick.RemoveAllListeners();
                 easyButton.onClick.AddListener(() => LoadLevel("Scene_Easy"));
-                easyButton.gameObject.SetActive(false); // Hide initially
+                easyButton.gameObject.SetActive(false);
             }
             else if (btn.gameObject.name == "Medium")
             {
                 mediumButton = btn;
                 mediumButton.onClick.RemoveAllListeners();
                 mediumButton.onClick.AddListener(() => LoadLevel("Scene_Medium"));
-                mediumButton.gameObject.SetActive(false); // Hide initially
+                mediumButton.gameObject.SetActive(false);
             }
             else if (btn.gameObject.name == "Hard")
             {
                 hardButton = btn;
                 hardButton.onClick.RemoveAllListeners();
                 hardButton.onClick.AddListener(() => LoadLevel("Scene_Hard"));
-                hardButton.gameObject.SetActive(false); // Hide initially
+                hardButton.gameObject.SetActive(false); 
             }
             else if (btn.gameObject.name == "BackButton")
             {
                 backButton = btn;
                 backButton.onClick.RemoveAllListeners();
                 backButton.onClick.AddListener(GoBackToMainMenu);
-                backButton.gameObject.SetActive(false); // Hide initially
+                backButton.gameObject.SetActive(false); 
             }
         }
     }
@@ -129,13 +120,13 @@ public class MainMenuController : MonoBehaviour
         if (hardButton != null) hardButton.gameObject.SetActive(false);
 
         // Hide Credit Text GameObject
-        if (creditTextObj != null) creditTextObj.SetActive(false);
+        // if (creditTextObj != null) creditTextObj.SetActive(false);
 
         // Destroy dynamic panel if it exists
         if (creditsPanel != null)
         {
-            Destroy(creditsPanel);
-            creditsPanel = null;
+            // Destroy(creditsPanel)
+            creditsPanel.SetActive(false);
         }
 
         // Hide Back Button
@@ -164,7 +155,7 @@ public class MainMenuController : MonoBehaviour
         // Show Back Button
         if (backButton != null) backButton.gameObject.SetActive(true);
 
-        creditTextObj.SetActive(true);
+        if (creditsPanel != null) creditsPanel.SetActive(true);
     }
 
     private void PlayButtonClick()
