@@ -241,7 +241,7 @@ GameObject:
   - component: {fileID: 114367127}
   - component: {fileID: 114367128}
   m_Layer: 5
-  m_Name: Toggle
+  m_Name: Pause Toggle
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -264,7 +264,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 477, y: 157}
+  m_AnchoredPosition: {x: 948.3, y: 483.5}
   m_SizeDelta: {x: 160, y: 20}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &114367128
@@ -718,7 +718,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -263.6, y: 132}
+  m_AnchoredPosition: {x: -800.8, y: 466.4}
   m_SizeDelta: {x: 200, y: 50}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &281237025
@@ -3139,6 +3139,7 @@ MonoBehaviour:
   slashTrailColor: {r: 1, g: 0.92, b: 0.35, a: 1}
   slashTrailWidth: 0.08
   slashTrailDuration: 0.18
+  vfxIntensity: 1
 --- !u!4 &1565028299
 Transform:
   m_ObjectHideFlags: 0
